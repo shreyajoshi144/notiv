@@ -1,42 +1,53 @@
-# 🧠 Notiv — From Voice to Value
+# 🧠 Notiv - From Voice to Value
 
-> **AI Meeting Intelligence Platform** · Transcribe, summarise, extract, and semantically chat with any meeting recording.
+Notiv turns meeting audio or YouTube recordings into structured transcripts, executive summaries, action items, decision logs, and a semantic chat interface over the meeting content.
 
----
+<img width="1693" height="929" alt="ChatGPT Image Jun 27, 2026, 01_04_50 AM" src="https://github.com/user-attachments/assets/be8f0181-a81f-4c13-98e0-3b27e067c551" />
 
-## What It Does
+## Why this project exists
 
-Notiv ingests a YouTube link or a local audio/video file and runs a full AI pipeline on it — producing a structured executive summary, a decision log, assigned action items, open follow-ups, and a RAG-powered chat interface so you can ask anything about the meeting in plain language.
+Meetings create important decisions and follow-ups, but the value is often lost in long recordings and scattered notes. Notiv automates the workflow from audio ingestion to searchable meeting intelligence.
 
----
+## What it does
 
-## Feature Overview
+- Accepts YouTube links or local audio/video files.
+- Transcribes English using local Whisper.
+- Transcribes Hinglish using Sarvam AI and translates it to English.
+- Generates structured executive summaries with map-reduce summarization.
+- Extracts action items, decision logs, and open follow-ups.
+- Indexes transcripts in ChromaDB for semantic Q&A over the meeting content.
 
-| Feature | Detail |
-|---|---|
-| **Audio ingestion** | YouTube URL via `yt-dlp` or local file (mp4, mp3, wav, etc.) |
-| **Transcription** | English → OpenAI Whisper (local) · Hinglish → Sarvam AI `saaras:v2.5` (translate-to-English) |
-| **Executive Summary** | Map-reduce summarisation over chunked transcript via Mistral AI |
-| **Extraction** | Action items with owner + deadline, Decision log, Open follow-ups |
-| **RAG Chat** | ChromaDB vector store + `all-MiniLM-L6-v2` embeddings + Mistral retrieval chain |
-| **Live pipeline status** | Animated step-by-step progress in sidebar |
-| **CLI mode** | `main.py` for headless terminal usage |
+## Key highlights
 
----
+- End-to-end pipeline from raw audio to searchable insights.
+- Language-aware transcription routing for English and Hinglish.
+- Local vector store for persistent retrieval.
+- RAG-based chat with grounded answers from transcript context.
+- Streamlit UI plus CLI mode for flexible usage.
 
-## Tech Stack
+## Architecture
 
-```
-Frontend      Streamlit 1.58
-LLM           Mistral AI  (mistral-small-latest via LangChain)
-Transcription OpenAI Whisper (local) · Sarvam AI (Hinglish)
-Embeddings    sentence-transformers / all-MiniLM-L6-v2
-Vector DB     ChromaDB (local persist)
-Orchestration LangChain LCEL (RunnablePassthrough, RunnableLambda)
-Audio         pydub · ffmpeg · yt-dlp
-```
+1. Input: YouTube URL or local file.
+2. Audio processing: Download, convert to WAV, split into chunks.
+3. Transcription: Whisper or Sarvam depending on language.
+4. Title generation: Create a short professional meeting title.
+5. Summary generation: Chunked map-reduce summarization.
+6. Extraction: Action items, decisions, and follow-ups.
+7. Indexing: Embeddings stored in ChromaDB.
+8. Chat: Retrieval-based Q&A over meeting content.
 
----
+## Tech stack
+
+- Frontend: Streamlit 1.58
+- LLM: Mistral AI via LangChain
+- Transcription: OpenAI Whisper, Sarvam AI
+- Embeddings: sentence-transformers / all-MiniLM-L6-v2
+- Vector DB: ChromaDB
+- Orchestration: LangChain LCEL
+- Audio tools: pydub, ffmpeg, yt-dlp
+
+## Screenshots
+
 
 ## Project Structure
 
@@ -56,14 +67,12 @@ notiv/
 │   └── vector_store.py     # ChromaDB build / load / retriever
 │
 └── utils/
+    └── __init__.py
     └── audio_processor.py  # YouTube download, WAV conversion, chunking
 ```
 
 ---
-
-## Quickstart
-
-### 1. Clone & install
+## Setup
 
 ```bash
 git clone https://github.com/your-username/notiv.git
@@ -71,77 +80,65 @@ cd notiv
 pip install -r Requirements.txt
 ```
 
-> Requires `ffmpeg` installed on your system (`brew install ffmpeg` / `apt install ffmpeg`).
+### Requirements
 
-### 2. Configure environment
+- ffmpeg installed locally.
+- `MISTRAL_API_KEY` in `.env`.
+- `SARVAM_API_KEY` required only for Hinglish transcription.
+- Optional: `WHISPER_MODEL=base` or `small` for better accuracy on longer recordings.
 
-Create a `.env` file in the project root:
+## Environment variables
 
 ```env
 MISTRAL_API_KEY=your_mistral_key_here
-SARVAM_API_KEY=your_sarvam_key_here          # only needed for Hinglish
-WHISPER_MODEL=base                            # tiny / base / small / medium / large
+SARVAM_API_KEY=your_sarvam_key_here
+WHISPER_MODEL=base
+SARVAM_STT_MODEL=saaras:v2.5
 ```
 
-### 3. Run the app
+## Usage
+
+### Streamlit app
 
 ```bash
 streamlit run app.py
 ```
 
-Or use the CLI:
+### CLI mode
 
 ```bash
 python main.py
 ```
-
 ---
 
-## How the Pipeline Works
+## Example output
 
-```
-Input (URL / file)
-       │
-       ▼
- Audio Processing          yt-dlp download → WAV conversion → 10-min chunks
-       │
-       ▼
- Transcription             Whisper (English) or Sarvam AI (Hinglish → English)
-       │
-       ▼
- Title Generation          Mistral: 8-word professional title from transcript
-       │
-       ▼
- Executive Summary         Map-reduce: chunk → partial summaries → combined summary
-       │
-       ▼
- Extraction                Mistral: action items · decision log · follow-ups
-       │
-       ▼
- Vector Store              ChromaDB: 500-char chunks, MiniLM embeddings, persisted locally
-       │
-       ▼
- RAG Chat                  Retriever (top-4 chunks) + Mistral → Meeting Copilot
-```
-
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `MISTRAL_API_KEY` | ✅ | Mistral AI API key |
-| `SARVAM_API_KEY` | Only for Hinglish | Sarvam STT-translate API key |
-| `WHISPER_MODEL` | Optional | Whisper model size (default: `base`) |
-| `SARVAM_STT_MODEL` | Optional | Sarvam model (default: `saaras:v2.5`) |
-
+- Meeting title
+- Executive summary
+- Action items with owner and deadline
+- Decision log
+- Open follow-ups
+- RAG chat interface with transcript-grounded answers
 ---
 
 ## Notes
 
-- The ChromaDB vector store is persisted to `vector_db/` locally. Each new meeting overwrites the previous collection.
-- Sarvam's sync API only accepts ≤30s audio — `transcriber.py` automatically slices chunks into 25s pieces before sending.
-- YouTube downloads use browser cookies (`chrome → safari → firefox` fallback). You must be logged into YouTube in at least one of these browsers.
-- For long recordings, `WHISPER_MODEL=small` or `medium` gives meaningfully better accuracy at moderate cost.
+- The vector store is persisted locally in `vector_db/`.
+- Sarvam’s sync API only accepts short audio chunks, so audio is sliced before transcription.
+- YouTube downloads use browser cookies, so you must be logged into YouTube in at least one supported browser.
 
+## Limitations
 
+- The current vector store setup overwrites the previous meeting collection.
+- Speaker diarization is not yet included.
+- Long recordings may require larger Whisper models for better accuracy.
+
+## Future improvements
+
+- Support multiple meetings with separate persistent collections.
+- Add speaker diarization.
+- Add export to PDF or Markdown.
+- Add meeting history and multi-session chat.
+- Improve observability and pipeline progress tracking.
+
+---
