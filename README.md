@@ -46,7 +46,20 @@ Meetings create important decisions and follow-ups, but the value is often lost 
 - Orchestration: LangChain LCEL
 - Audio tools: pydub, ffmpeg, yt-dlp
 
-## Screenshots
+<img width="1470" height="956" alt="Screenshot 2026-06-27 at 6 28 34 PM" src="https://github.com/user-attachments/assets/6b9143c8-2836-446d-90cc-d8eac066ee8a" />
+
+<img width="1470" height="956" alt="Screenshot 2026-06-27 at 6 54 17 PM" src="https://github.com/user-attachments/assets/4bb2f9c5-9bfc-4ae8-bd3c-1c765f4f4210" />
+
+<img width="1470" height="956" alt="Screenshot 2026-06-27 at 6 50 02 PM" src="https://github.com/user-attachments/assets/efdb13f3-4798-4acb-b809-284c9b69b7f3" />
+
+---
+
+## Demo Video 
+
+https://github.com/user-attachments/assets/3a23968d-3404-42cb-b029-6ced69aefd25
+
+https://github.com/user-attachments/assets/19008c73-5ac5-44d1-a70e-95bebbb7e7db
+
 
 
 ## Project Structure
