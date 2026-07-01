@@ -153,5 +153,4 @@ python main.py
 - Add export to PDF or Markdown.
 - Add meeting history and multi-session chat.
 - Improve observability and pipeline progress tracking.
-
 ---
