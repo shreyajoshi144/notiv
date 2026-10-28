@@ -1,0 +1,70 @@
+/* Sign in / create account / reset. The hero photograph is the backdrop (cropped to keep the student in frame, never
+   filtered); a night gradient sits on top so the solid card and the copy stay readable. No glass, no blur. */
+.auth-page{margin:0;min-height:100dvh;background:#0f2238;color:var(--ink);position:relative;overflow-x:hidden}
+.auth-bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#0f2238}
+.auth-bg img{width:100%;height:100%;object-fit:cover;object-position:72% 60%;display:block}
+.auth-bg::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(11,24,42,.92) 0%,rgba(11,24,42,.72) 34%,rgba(11,24,42,.18) 70%,rgba(11,24,42,.35) 100%),
+             linear-gradient(180deg,rgba(11,24,42,.2),rgba(11,24,42,.55))}
+.auth-wrap{position:relative;z-index:1;display:grid;grid-template-columns:minmax(360px,520px) minmax(0,1fr);min-height:100dvh;
+  gap:clamp(24px,5vw,80px);padding:clamp(16px,3vw,40px)}
+.auth-shell{display:flex;flex-direction:column;gap:22px;padding:clamp(22px,3vw,36px);background:var(--paper);border-radius:28px;
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06);align-self:center;width:100%;animation:auth-in .5s var(--spring,ease) both}
+@keyframes auth-in{from{transform:translateY(14px)}}
+.auth-brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);align-self:flex-start}
+.auth-card{width:100%}
+
+/* segmented switch between sign in and create account */
+.auth-seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:12px;padding:3px;gap:3px;margin-bottom:24px}
+.auth-seg a{display:block;text-align:center;padding:9px 8px;border-radius:9px;font-weight:600;font-size:.92rem;color:var(--ink-2);text-decoration:none;
+  transition:background-color .18s,color .18s,transform .12s}
+.auth-seg a:active{transform:scale(.97)}
+.auth-seg a[aria-current="page"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(14,22,40,.16)}
+
+.auth-card h1{font-size:clamp(2rem,1.5rem + 1.8vw,2.7rem);font-weight:330;letter-spacing:-.025em;color:var(--dusk-deep);margin-bottom:8px;font-variation-settings:"opsz" 144}
+.auth-sub{color:var(--ink-2);font-size:1.02rem;margin-bottom:22px}
+
+/* inset grouped fields */
+.auth-group{background:#fff;border:1px solid var(--rule);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.auth-field{display:grid;gap:2px;padding:10px 14px 8px;border-bottom:1px solid var(--rule);position:relative;transition:background-color .15s}
+.auth-field:last-child{border-bottom:0}
+.auth-field:focus-within{background:#fffaf4}
+.auth-field label{font-weight:600;font-size:.76rem;letter-spacing:.02em;color:var(--ink-3)}
+.auth-field:focus-within label{color:var(--clay)}
+.auth-field input{width:100%;min-height:30px;padding:2px 0;border:0;border-radius:0;background:transparent;color:var(--ink);font-size:1.02rem;box-shadow:none}
+.auth-field input:focus-visible{outline:none;box-shadow:none}
+.auth-password{position:relative}.auth-password input{padding-right:64px}
+.auth-toggle{position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--dusk);font-weight:600;font-size:.86rem;cursor:pointer;padding:6px 10px;border-radius:8px}
+.auth-toggle:hover{background:var(--dusk-tint)}
+.auth-hint{margin:2px 0 0;font-size:.8rem;color:var(--amber-ink)}
+.auth-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 6px}
+.auth-meter i{height:4px;border-radius:2px;background:var(--sunk-2);transition:background-color .25s}
+.auth-meter[data-s="1"] i:nth-child(-n+1){background:var(--danger)}
+.auth-meter[data-s="2"] i:nth-child(-n+2){background:var(--amber)}
+.auth-meter[data-s="3"] i:nth-child(-n+3){background:var(--dusk)}
+.auth-meter[data-s="4"] i{background:var(--olive)}
+.auth-meter-t{font-size:.78rem;color:var(--ink-3);margin:0 0 6px}
+
+.auth-btn{width:100%;min-height:52px;border:0;border-radius:14px;background:var(--clay);color:var(--clay-ink);font-weight:650;font-size:1.02rem;cursor:pointer;margin-top:10px;
+  box-shadow:0 12px 24px -14px rgba(176,66,14,.85);transition:background-color .15s,transform .14s var(--spring,ease)}
+.auth-btn:hover{background:var(--clay-hover)}.auth-btn:active:not(:disabled){transform:scale(.98)}.auth-btn:disabled{opacity:.65;cursor:wait}
+.auth-links{display:flex;gap:18px;flex-wrap:wrap;margin-top:20px;font-size:.93rem}
+.auth-alert{padding:12px 14px;border-radius:14px;margin-bottom:16px;font-size:.95rem}
+.auth-alert.error{background:var(--danger-tint);color:var(--danger)}.auth-alert.success{background:var(--olive-tint);color:var(--olive-ink)}
+.auth-foot{color:var(--ink-3);font-size:.88rem;margin:0}
+
+/* the right-hand story over the photograph */
+.auth-art{align-self:end;justify-self:start;max-width:520px;padding:0 0 clamp(16px,4vw,48px);color:#fff}
+.auth-quote{font-family:var(--serif);font-weight:300;font-size:clamp(2rem,1.4rem + 2.4vw,3.6rem);line-height:1.04;letter-spacing:-.03em;margin:0 0 18px;
+  font-variation-settings:"opsz" 144;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.auth-quote em{color:#ffb489}
+.auth-chip{display:inline-flex;align-items:center;gap:10px;margin:0;padding:10px 14px;border-radius:999px;background:rgba(10,20,36,.72);color:#e9eef6;font-size:.9rem;
+  border:1px solid rgba(255,255,255,.12)}
+.ac-dot{width:8px;height:8px;border-radius:50%;background:#f36b1d;box-shadow:0 0 12px 2px rgba(243,107,29,.6)}
+
+@media(max-width:900px){
+  .auth-wrap{grid-template-columns:1fr;align-content:start;gap:16px}
+  .auth-art{order:-1;padding:8px 4px 0}.auth-quote{font-size:2rem;margin-bottom:10px}.auth-chip{display:none}
+  .auth-bg::after{background:linear-gradient(180deg,rgba(11,24,42,.55),rgba(11,24,42,.85) 55%)}
+}
+@media(prefers-reduced-motion:reduce){.auth-shell{animation:none}}

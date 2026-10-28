@@ -1,0 +1,19 @@
+# Runtime dependencies for production (versions are floors; pin with a lock file in your build).
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+python-multipart>=0.0.9
+psycopg[binary]>=3.1          # PostgreSQL driver (NOTIV_DATABASE_URL)
+boto3>=1.34                   # S3-compatible storage (NOTIV_STORAGE=s3)
+
+# Processing pipeline (all required for upload -> transcript/slides -> Ask)
+numpy>=1.26
+opencv-python-headless>=4.9   # slide matching
+python-pptx>=0.6.23           # PPTX slide count + text
+faster-whisper>=1.0           # speech-to-text (model weights download on first use: set NOTIV_WHISPER_MODEL)
+av<19                         # PyAV 19 removed av.open(metadata_errors=...), which faster-whisper 1.2.1 still passes
+# Answer models for Ask Notiv + AI quiz (core/lecture/llm.py). Each is optional: a provider is used only when its key is set.
+openai>=3.37                  # OPENAI_API_KEY      (Responses API)
+mistralai>=3.3                # MISTRAL_API_KEY     (3.x import path: mistralai.client)
+anthropic>=2.2                # ANTHROPIC_API_KEY
+# System packages (apt): ffmpeg, poppler-utils, libreoffice-impress (+ fonts), tesseract-ocr (OCR for scanned pages) -- see Dockerfile

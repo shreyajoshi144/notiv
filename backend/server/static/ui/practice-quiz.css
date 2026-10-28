@@ -1,0 +1,31 @@
+.pq{max-width:820px;margin:0 auto}
+.pq-head{padding-bottom:20px;border-bottom:1px solid var(--rule);margin-bottom:24px}
+.pq-head h1{font-size:clamp(1.8rem,1.3rem + 1.6vw,2.6rem);font-weight:400}
+.pq-head .lede{color:var(--ink-2);margin:8px 0 0}
+.pq-form{display:grid;grid-template-columns:1fr 160px;gap:4px 16px}
+.pq-form .goal{grid-column:1/-1}
+.pq-form .go{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pq-wait{display:flex;gap:12px;align-items:center;padding:20px 0;color:var(--ink-2)}
+.pq-wait::before{content:"";width:18px;height:18px;border:2px solid var(--clay);border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.pq-score{display:flex;align-items:baseline;gap:14px;justify-content:space-between;flex-wrap:wrap;margin:6px 0 18px}
+.pq-score b{font-family:var(--serif);font-size:1.6rem;font-weight:400}
+.pq-q{border-top:1px solid var(--ink);padding:20px 0 24px}
+.pq-q legend{font-family:var(--serif);font-size:1.25rem;line-height:1.35;padding:0;margin-bottom:14px}
+.pq-q fieldset{border:0;margin:0;padding:0}
+.pq-num{font-family:var(--mono);font-size:.78rem;color:var(--clay);display:block;margin-bottom:6px}
+.pq-opt{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border:1px solid var(--rule-strong);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--paper)}
+.pq-opt:hover{border-color:var(--ink-3)}
+.pq-opt input{margin-top:3px}
+.pq-opt.right{border-color:var(--olive);background:var(--olive-tint);color:var(--olive-ink)}
+.pq-opt.wrong{border-color:var(--danger);background:var(--danger-tint)}
+.pq-q.answered .pq-opt{cursor:default}
+.pq-exp{margin-top:12px;padding:12px 14px;background:var(--sunk);border-radius:10px}
+.pq-exp p{margin:0 0 8px}
+.pq-exp .cites{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:560px){.pq-form{grid-template-columns:1fr}}
+
+.bank-editor{border-top:1px solid var(--rule);padding:24px 0;margin-top:18px}
+.bank-options{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.pq-q h2,.pq-q li{overflow-wrap:anywhere}
+.pq-head .actions{margin-top:16px}
+@media(max-width:560px){.bank-options{grid-template-columns:1fr}}

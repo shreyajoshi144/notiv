@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0f2238">
+<meta name="description" content="Notiv turns your lectures, slides, recordings and handwritten notes into a study desk: summaries, flashcards, quizzes and answers that point back to the page or minute they came from.">
+<meta property="og:title" content="Notiv — there's always more to learn">
+<meta property="og:description" content="A study desk for your own lectures. Every answer shows where it came from.">
+<title>Notiv — there's always more to learn</title>
+<link rel="preload" href="/static/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/assets/notiv-hero.jpg" as="image">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/ui/base.css">
+<link rel="stylesheet" href="/static/ui/landing.css">
+</head>
+<body class="lp">
+<a class="skip" href="#features">Skip to content</a>
+
+<div class="night">
+  <header class="lp-top">
+    <a class="brand" href="/" aria-label="Notiv home"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><use href="/static/logo.svg#m"/></svg><span class="wordmark">notiv<i>.</i></span></a>
+    <nav aria-label="Main">
+      <a href="#features">Features</a><a href="#solutions">Solutions</a><a href="#how">How it works</a><a href="#resources">Resources</a><a href="#faqs">FAQs</a>
+      <a class="btn primary sm" href="/register">Get started</a>
+    </nav>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero-copy">
+      <p class="kicker mono"><span class="dot" aria-hidden="true"></span>A study desk for your own lectures</p>
+      <h1 id="hero-h">There's always <em>more</em> to learn.</h1>
+      <p class="hero-sub">Bring the slides, the recording and the notes you scribbled in class. Notiv turns them into something you can study, question and practise — and every answer points back to the page or the minute it came from.</p>
+      <div class="hero-actions">
+        <a class="btn primary lg" href="/register">Start studying</a>
+        <a class="btn lg ghost" href="/sign-in">Sign in</a>
+      </div>
+      <ul class="hero-meta mono" aria-label="Supported files">
+        <li>PDF</li><li>PPTX</li><li>MP3</li><li>MP4</li><li>Handwritten notes</li>
+      </ul>
+    </div>
+
+    <div class="hero-art">
+      <div class="window">
+        <img class="hero-img" src="/static/assets/notiv-hero.jpg" width="736" height="414" alt="A student sits on a hillside with a laptop, under a streaming blue and orange night sky.">
+      </div>
+      <figure class="answer-card" aria-label="Example: an answer that cites its sources">
+        <p class="ac-q">Why does a large learning rate make training diverge?</p>
+        <p class="ac-a">Each update overshoots the minimum, so the loss bounces further away instead of settling <span class="cite">Slide 4</span> <span class="cite">12:31</span></p>
+        <figcaption class="ac-foot mono"><span class="ok" aria-hidden="true"></span>2 sources from your lecture</figcaption>
+      </figure>
+    </div>
+  </section>
+</div>
+
+<main>
+  <section class="receipts" aria-labelledby="rc-h">
+    <div class="rc-copy">
+      <p class="eyebrow mono">Ask Notiv</p>
+      <h2 id="rc-h">Ask your lecture. <em>It answers with receipts.</em></h2>
+      <p>Type a question the way you'd ask a classmate. The answer is written from your material only, and every claim links to the slide, page or moment in the recording it came from — one click and you're there.</p>
+      <p>If your lecture doesn't cover it, Notiv tells you so instead of guessing. You can still ask for a general explanation, clearly labelled as not coming from your notes.</p>
+    </div>
+    <div class="chat" role="img" aria-label="An example conversation: a question about the CAP theorem, answered with two cited sources from the lecture.">
+      <div class="bubble you">What does the CAP theorem actually say?</div>
+      <div class="bubble notiv">
+        <span class="who mono">Notiv · written from your lecture</span>
+        <p>A distributed data store can only guarantee two of three things at once — consistency, availability and partition tolerance <span class="cite">p. 12</span>. When the network splits, it has to choose between staying consistent and staying available <span class="cite">p. 13</span>.</p>
+        <div class="sources">
+          <span class="src-h mono">Sources</span>
+          <blockquote><span class="mono">p. 12</span> “It is impossible for a distributed system to simultaneously provide more than two of the three guarantees.”</blockquote>
+          <blockquote><span class="mono">p. 13</span> “Data is sufficiently replicated across nodes to keep the system up.”</blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="features" aria-labelledby="f-h">
+    <div class="band-head">
+      <p class="eyebrow mono">Features</p>
+      <h2 id="f-h">Everything a study session needs, kept on one desk</h2>
+    </div>
+    <ol class="feat">
+      <li>
+        <span class="num mono" aria-hidden="true">01</span>
+        <h3>Lectures, slides and recordings</h3>
+        <p>Add a PDF or PowerPoint deck, or an MP3 or MP4 recording. Notiv renders every page, transcribes the audio with timestamps and keeps your original file.</p>
+      </li>
+      <li>
+        <span class="num mono" aria-hidden="true">02</span>
+        <h3>Handwritten notes, read properly</h3>
+        <p>Scanned or handwritten pages are read from the page itself. Anything that can't be read reliably is flagged, never quietly passed off as your notes.</p>
+      </li>
+      <li>
+        <span class="num mono" aria-hidden="true">03</span>
+        <h3>Summaries and concept maps</h3>
+        <p>An overview, key takeaways and topic-by-topic summaries, plus a map of how the ideas connect — each part citing where it came from.</p>
+      </li>
+      <li>
+        <span class="num mono" aria-hidden="true">04</span>
+        <h3>Flashcards and quizzes</h3>
+        <p>Questions that test understanding rather than copy-paste, with the answer and its source one tap away. Add your own to a question bank, too.</p>
+      </li>
+      <li>
+        <span class="num mono" aria-hidden="true">05</span>
+        <h3>Notebooks and a canvas</h3>
+        <p>Gather a course in one notebook, write notes beside your lectures, and lay out concepts on a canvas. Share a read-only link when you want to.</p>
+      </li>
+      <li>
+        <span class="num mono" aria-hidden="true">06</span>
+        <h3>A timer and a small companion</h3>
+        <p>A focus timer that keeps true time in background tabs, and a cat on your desk that opens Ask, the timer and practice — or naps out of the way.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="band tint" id="solutions" aria-labelledby="s-h">
+    <div class="band-head">
+      <p class="eyebrow mono">Solutions</p>
+      <h2 id="s-h">For the way students actually study</h2>
+    </div>
+    <dl class="uses">
+      <div><dt><span class="when mono">Missed a class</span>Catch up on a lecture you missed</dt><dd>Upload the recording and slides, skim the transcript slide by slide, and ask about the parts you weren't there for.</dd></div>
+      <div><dt><span class="when mono">Exam week</span>Revise a whole course</dt><dd>Gather every lecture in one notebook, then work through the summaries, flashcards and quizzes built from them.</dd></div>
+      <div><dt><span class="when mono">Reading list</span>Work from slides and readings</dt><dd>Turn a deck or a PDF into something you can question, and jump straight to the page behind each answer.</dd></div>
+      <div><dt><span class="when mono">Deep work</span>Study in focused blocks</dt><dd>Start a focus session, take the break, and come back to exactly where you left off.</dd></div>
+    </dl>
+  </section>
+
+  <section class="showcase" aria-labelledby="sc-h">
+    <div class="band-head center">
+      <p class="eyebrow mono">Inside the desk</p>
+      <h2 id="sc-h">Your lecture, its transcript and the slide on screen — side by side</h2>
+    </div>
+    <figure class="browser">
+      <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span class="addr mono">notiv · Gradient descent and regularization</span></div>
+      <img src="/static/assets/app-preview.png" width="1280" height="800" alt="Notiv's lecture view: a video with a slide-aware timeline, the current slide, and a timestamped transcript linked to each slide." loading="lazy">
+      <figcaption class="sr">A screenshot of the Notiv lecture view.</figcaption>
+    </figure>
+  </section>
+
+  <section class="band" id="how" aria-labelledby="h-h">
+    <div class="band-head">
+      <p class="eyebrow mono">How it works</p>
+      <h2 id="h-h">From a file to a study session in four steps</h2>
+    </div>
+    <ol class="steps">
+      <li><span class="n" aria-hidden="true">1</span><h3>Upload</h3><p>Add PDF, PPTX, MP3 or MP4 files. Your original files are kept as they are.</p></li>
+      <li><span class="n" aria-hidden="true">2</span><h3>Let it process</h3><p>Watch the progress as pages are read and audio is transcribed. If something fails, you're told why and can retry.</p></li>
+      <li><span class="n" aria-hidden="true">3</span><h3>Study</h3><p>Read the summary, follow the concept map, play the recording and open the exact source of anything.</p></li>
+      <li><span class="n" aria-hidden="true">4</span><h3>Ask and practise</h3><p>Question the material, then test yourself with flashcards, quizzes and your own question bank.</p></li>
+    </ol>
+  </section>
+
+  <section class="band tint" id="resources" aria-labelledby="r-h">
+    <div class="band-head">
+      <p class="eyebrow mono">Resources</p>
+      <h2 id="r-h">Good to know</h2>
+    </div>
+    <ul class="res">
+      <li><a href="/static/docs.html"><strong>Documentation</strong><span>Supported files, workflow and shortcuts</span><b class="go" aria-hidden="true">→</b></a></li>
+      <li><a href="/static/help.html"><strong>Help</strong><span>If an upload or answer isn't working</span><b class="go" aria-hidden="true">→</b></a></li>
+      <li><a href="/static/privacy.html"><strong>Privacy</strong><span>What Notiv keeps and who can see it</span><b class="go" aria-hidden="true">→</b></a></li>
+      <li><a href="/static/terms.html"><strong>Terms</strong><span>The rules for using Notiv</span><b class="go" aria-hidden="true">→</b></a></li>
+    </ul>
+  </section>
+
+  <section class="band" id="faqs" aria-labelledby="q-h">
+    <div class="faq-wrap">
+      <div class="band-head">
+        <p class="eyebrow mono">FAQs</p>
+        <h2 id="q-h">Questions, answered</h2>
+        <p class="muted">Something else? The <a href="/static/help.html">help page</a> covers uploads and answers in more detail.</p>
+      </div>
+      <div class="faq">
+        <details><summary>Which files can I upload?</summary><p>PDF and PowerPoint (PPTX) for slides and documents, and MP3 and MP4 for recordings. Other formats are not accepted.</p></details>
+        <details><summary>Can it read my handwritten notes?</summary><p>Yes, when the server has an image-reading AI service set up: handwritten or scanned pages are read from the page image. Pages that can't be read reliably are flagged and left out, so nothing unreadable is presented as your notes.</p></details>
+        <details><summary>Where do answers come from?</summary><p>From the lecture you ask about. Each answer links to its source. If the lecture doesn't contain the answer, Notiv says so, and you can optionally ask for a separately labelled general-knowledge explanation.</p></details>
+        <details><summary>Do summaries, flashcards and quizzes need setup?</summary><p>They're written by an AI service that the server must be configured with. Without one, you still get verbatim excerpts from your material, your own question bank and every other feature.</p></details>
+        <details><summary>Can I share a notebook?</summary><p>You can create a read-only link for a notebook, set it to expire, and revoke it at any time.</p></details>
+        <details><summary>Does the timer keep running if I switch tabs?</summary><p>Yes. It counts to a fixed end time, so it stays accurate when the tab is in the background.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" aria-labelledby="c-h">
+    <p class="eyebrow mono">Your first lecture</p>
+    <h2 id="c-h">Bring one lecture. <em>See what you can ask it.</em></h2>
+    <div class="closing-actions">
+      <a class="btn primary lg" href="/register">Get started</a>
+      <a class="btn lg ghost" href="/sign-in">I already have an account</a>
+    </div>
+  </section>
+</main>
+
+<footer class="lp-foot">
+  <div class="foot-brand">
+    <a class="brand" href="/" aria-label="Notiv home"><svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><use href="/static/logo.svg#m"/></svg><span class="wordmark">notiv<i>.</i></span></a>
+    <p class="faint small">There's always more to learn.</p>
+  </div>
+  <nav aria-label="Footer">
+    <a href="/static/docs.html">Documentation</a><a href="/static/help.html">Help</a><a href="/static/privacy.html">Privacy</a><a href="/static/terms.html">Terms</a>
+    <a href="/sign-in">Sign in</a><a href="/register">Create an account</a>
+  </nav>
+</footer>
+</body>
+</html>

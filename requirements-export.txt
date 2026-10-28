@@ -1,0 +1,4 @@
+# Optional document and presentation export dependencies. Install alongside requirements-prod.txt to enable PDF/DOCX/PPTX exports.
+reportlab>=4.0
+python-docx>=1.1
+python-pptx>=0.6.23

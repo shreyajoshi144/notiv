@@ -1,27 +1,29 @@
+# Secrets
 .env
+.env.*
+!.env.example
 
-vector_db/
-
-downloads/
-
+# Python
 __pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
 
-*.pyc
+# Runtime data (uploads, SQLite, derived assets)
+storage/
+*.db
+*.db-*
 
+# Media
 *.wav
-
+*.mp3
 *.mp4
 
-*.mp3
-
-.streamlit/
-
-.venv/
-
-venv/
-
+# Local tooling / editors / OS
+_build_tools/
 .idea/
-
 .vscode/
-
 .DS_Store
