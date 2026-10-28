@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0f2238">
+<meta name="robots" content="noindex">
+<title>Account — Notiv</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/assets/notiv-hero.jpg" as="image">
+<link rel="stylesheet" href="/static/ui/base.css">
+<link rel="stylesheet" href="/static/ui/auth.css">
+</head>
+<body class="auth-page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="auth-bg" aria-hidden="true"><img src="/static/assets/notiv-hero.jpg" width="736" height="414" alt=""></div>
+<div class="auth-wrap">
+  <main class="auth-shell" id="main" tabindex="-1">
+    <a class="auth-brand" href="/" aria-label="Notiv home"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><use href="/static/logo.svg#m"/></svg><span class="wordmark">notiv<i>.</i></span></a>
+    <section class="auth-card" id="auth-card" aria-live="polite"><p>Loading secure account form…</p></section>
+    <p class="auth-foot">There's always more to learn. <a href="/">Back to Notiv</a></p>
+  </main>
+  <aside class="auth-art" aria-label="About Notiv">
+    <p class="auth-quote">Bring one lecture.<br><em>See what you can ask it.</em></p>
+    <figure class="auth-chip">
+      <span class="ac-dot" aria-hidden="true"></span>
+      <figcaption>Every answer points to the page or minute it came from.</figcaption>
+    </figure>
+  </aside>
+</div>
+<script type="module" src="/static/ui/auth.js"></script>
+</body>
+</html>
