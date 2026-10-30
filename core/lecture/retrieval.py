@@ -96,10 +96,28 @@ def content_terms(text: str) -> List[str]:
     return out
 
 
+def word_stems(text: str) -> set:
+    """Stems of every word in `text`. A hyphenated compound also yields its parts and its closed form, so
+    "write-through", "write through" and "writethrough" all meet."""
+    out = set()
+    for w in _WORD.findall((text or "").lower()):
+        out.add(stem(w))
+        if "-" in w.strip("-"):
+            parts = [p for p in w.split("-") if p]
+            out.update(stem(p) for p in parts)
+            out.add(stem("".join(parts)))
+    return out
+
+
 def term_covered(term: str, stems: set) -> bool:
-    """Exact stem, prefix relation ("backprop"/"backpropagation") or near-miss typo."""
+    """Exact stem, prefix relation ("backprop"/"backpropagation"), near-miss typo, or a hyphenated term whose
+    parts are all present."""
     if term in stems:
         return True
+    if "-" in term:
+        parts = [stem(p) for p in term.split("-") if p]
+        if stem("".join(parts)) in stems or (parts and all(term_covered(p, stems) for p in parts)):
+            return True
     if len(term) >= 5:
         for s in stems:
             if len(s) >= 5 and (s.startswith(term) or term.startswith(s)):
@@ -112,7 +130,7 @@ def term_covered(term: str, stems: set) -> bool:
 def coverage(terms: Sequence[str], texts: Sequence[str]) -> float:
     if not terms:
         return 0.0
-    stems = {stem(w) for t in texts for w in _WORD.findall(t.lower())}
+    stems = set().union(*(word_stems(t) for t in texts))
     return sum(term_covered(t, stems) for t in terms) / len(terms)
 
 

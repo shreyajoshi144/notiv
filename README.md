@@ -24,13 +24,14 @@ flowchart LR
 | [Sprints](docs/SPRINTS.md) | How Notiv was built, Sprint 1 to 13 |
 | [Changelog](CHANGELOG.md) | Changes per release |
 
-Current state (2026-10-27):
+Current state (2026-10-31):
 
-* **pytest:** 627 passed, 6 skipped.
+* **pytest:** 631 passed, 6 skipped.
 * **Browser e2e:** 15 / 15.
 * **Format matrix:** 33 / 33.
 * **Offline AI scorecard:** 100 % on all four metrics.
-* **Not verified:** live AI output (no working provider key), PostgreSQL, S3 and the Docker image. See
+* **Docker image:** built; deployment smoke test 41 / 41 behind a simulated HTTPS proxy.
+* **Not verified:** live AI output (no working provider key), PostgreSQL and S3. See
   [Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
 
 ## Quick start (development: SQLite + local files)
@@ -101,15 +102,34 @@ bash tools/verify_sprint5.sh                              # PostgreSQL / S3 / Fa
 
 ## Deploy
 
+The Docker image is built and smoke-tested (see [Results and testing §6b](docs/RESULTS_AND_TESTING.md#6b-docker-deployment-smoke-test)).
+It needs about **2 GB RAM** (Whisper, LibreOffice) and a **persistent volume at `/data`**, which holds the database,
+uploads and the Whisper model. It listens on `$PORT` (default 8000) and trusts the platform's HTTPS proxy headers.
+
+**Single server** (Railway, Render, Fly, a VPS): SQLite plus local files on the volume, worker in-process.
+
 ```bash
-docker build -t notiv .
-docker run --env-file .env notiv python -m core.lecture.migrations upgrade
-docker run --env-file .env -p 8000:8000 notiv                      # API
-docker run --env-file .env notiv python -m core.lecture.worker     # worker(s); scale horizontally
+NOTIV_ENV=production
+NOTIV_AUTH_SECRET=…                 # python -c 'import secrets; print(secrets.token_urlsafe(48))'
+NOTIV_SIGNING_SECRET=…              # a different value of the same kind
+NOTIV_ALLOW_SQLITE_IN_PROD=1
+NOTIV_ALLOW_LOCAL_STORAGE_IN_PROD=1
+NOTIV_SINGLE_INSTANCE=1
+NOTIV_RATELIMIT_BACKEND=memory
+NOTIV_INPROCESS_WORKER=1
+NOTIV_CORS_ORIGINS=https://your-domain
+NOTIV_PUBLIC_BASE_URL=https://your-domain
+GROQ_API_KEY=…                      # or OPENAI_API_KEY / MISTRAL_API_KEY / ANTHROPIC_API_KEY
 ```
 
-Run behind HTTPS. Before the first real deploy, run the checks in
-[Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
+```bash
+docker build -t notiv .
+docker run -d --env-file prod.env -v notiv-data:/data -p 8000:8000 notiv
+python tools/smoke_deploy.py https://your-domain          # 41 checks: accounts, all four formats, Ask, isolation
+```
+
+**Several servers:** PostgreSQL (`NOTIV_DATABASE_URL`), S3 (`NOTIV_STORAGE=s3`), `NOTIV_RATELIMIT_BACKEND=db`,
+`NOTIV_INPROCESS_WORKER=0`, and run `python -m core.lecture.worker` as separate containers.
 
 ## Layout
 

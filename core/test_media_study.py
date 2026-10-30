@@ -203,6 +203,7 @@ class TestNotebookSaysWhyAiIsMissing(unittest.TestCase):
         self.lid = self.env.lecture(user=31, media=path)
         self.env.process(self.lid, segments(*SEGS))
         self.c = TestClient(app, raise_server_exceptions=False)
+        os.environ.setdefault("NOTIV_AUTH_SECRET", "media-study-test-" + "k7Qz" * 10)
         self.h = {"Authorization": "Bearer " + create_token(31, os.environ["NOTIV_AUTH_SECRET"])}
 
     def tearDown(self):

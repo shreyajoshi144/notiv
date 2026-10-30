@@ -612,3 +612,30 @@ class TestIsolationAndAuth(AskBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ───────────────────────── hyphenated compounds (found by the Docker smoke test) ─────────────────────────
+class TestHyphenatedTerms(AskBase):
+    """Whisper writes "write-through"; students type "write through" (and the reverse on slides)."""
+
+    def test_spaced_and_closed_forms_meet_the_hyphenated_form(self):
+        stems = retrieval.word_stems("A write-through cache updates the cache and the database together.")
+        for q in ("What does a write through cache update?", "what is a writethrough cache"):
+            terms = retrieval.content_terms(q)
+            self.assertTrue(all(retrieval.term_covered(t, stems) for t in terms), (q, terms))
+
+    def test_hyphenated_question_meets_spaced_evidence(self):
+        stems = retrieval.word_stems("A write through cache updates the cache and the database together.")
+        self.assertTrue(retrieval.term_covered(retrieval.stem("write-through"), stems))
+
+    def test_hyphen_does_not_create_matches_from_one_part_alone(self):
+        stems = retrieval.word_stems("The write path is slow.")
+        self.assertFalse(retrieval.term_covered(retrieval.stem("write-through"), stems))
+
+    def test_ask_answers_from_a_hyphenated_transcript_line(self):
+        lid = self.env.lecture(ALICE, self.video, self.pdf, title="Caching")
+        self.env.process(lid, segments(Segment(1, 6, "Today we study caching, a cache keeps frequently used data in memory."),
+                                       Segment(6, 12, "A write-through cache updates the cache and the database together.")))
+        m = self.svc().chat(ALICE, lid, "What does a write through cache update?")
+        self.assertTrue(m["grounded"], m["content"])
+        self.assertIn("database together", m["content"])

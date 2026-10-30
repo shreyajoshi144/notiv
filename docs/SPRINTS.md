@@ -156,5 +156,5 @@ Regression target: a 39-page handwritten system-design PDF with a garbled text l
 ## What is next
 
 * Run the live checks with a working provider key (see [Results and testing §9](RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying)).
-* Verify PostgreSQL, S3 and the Docker image with `tools/verify_sprint5.sh`.
+* Verify PostgreSQL and S3 with `tools/verify_sprint5.sh` (the Docker image was verified on 2026-10-31).
 * Test long, real-speech recordings.

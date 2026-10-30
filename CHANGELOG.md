@@ -3,7 +3,26 @@
 All notable changes to Notiv. Newest first. Format based on [Keep a Changelog](https://keepachangelog.com/).
 Sprint context: [docs/SPRINTS.md](docs/SPRINTS.md). Test evidence: [docs/RESULTS_AND_TESTING.md](docs/RESULTS_AND_TESTING.md).
 
-## [Unreleased] — 2026-10-27 · Launch readiness
+## [Unreleased] — 2026-10-31 · Docker verified
+
+### Added
+- `tools/smoke_deploy.py`: drives a running deployment like a browser (cookie session + CSRF): health, readiness,
+  accounts, all four formats, Ask, study items, cross-account 404; `--as-proxy` simulates an HTTPS reverse proxy.
+- `docker-entrypoint.sh`.
+
+### Changed
+- Dockerfile: data lives in a `/data` volume (SQLite, uploads, Whisper weights via `HF_HOME`); listens on `$PORT`.
+
+### Fixed
+- The container could not write a root-owned volume (the app runs as uid 10001). The entrypoint now fixes ownership
+  and drops privileges.
+- Behind a hosting platform's HTTPS proxy every write failed the origin check, because uvicorn ignored
+  `X-Forwarded-Proto` from non-local proxies. The image sets `FORWARDED_ALLOW_IPS=*`.
+- Ask abstained when evidence and question wrote a compound differently ("write-through" / "write through" /
+  "writethrough"). `retrieval.word_stems()` adds hyphen parts and the closed form.
+- `test_media_study` relied on `NOTIV_AUTH_SECRET` being set in the shell.
+
+## 2026-10-27 · Launch readiness
 
 ### Added
 - `tools/eval_format_matrix.py`: 33 real PDF / PPTX / MP3 / MP4 variants, including broken files, run through the real pipeline.
