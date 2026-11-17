@@ -12,3 +12,9 @@ _build_tools
 .idea
 .vscode
 .DS_Store
+*.env
+!.env.example
+.claude
+*.db
+*.db-*
+tools/__pycache__

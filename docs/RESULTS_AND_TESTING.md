@@ -7,22 +7,24 @@ What has been run, what it showed, and what has **not** been verified. Method an
 
 | Check | Result | Status |
 |---|---|---|
-| Unit + integration tests (`pytest core`) | **631 passed, 6 skipped, 0 failed** (637 collected) | ✅ |
+| Unit + integration tests (`pytest core`, with PostgreSQL + S3 enabled) | **636 passed, 2 skipped, 0 failed** (638 collected) | ✅ |
 | Docker image + deployment smoke test (`tools/smoke_deploy.py`) | **41 / 41** behind a simulated HTTPS proxy | ✅ |
-| Browser end-to-end (`tools/e2e_redesign.py`, real Chromium) | **15 / 15**, zero console errors | ✅ |
+| Browser end-to-end (`tools/e2e_redesign.py`, real Chromium) | **18 / 18**, zero console errors | ✅ |
 | Format robustness matrix (`tools/eval_format_matrix.py`) | **33 / 33** correct outcomes (PDF 11, PPTX 7, MP3 7, MP4 8) | ✅ |
 | AI scorecard, offline (`tools/eval_ai_study.py`) | retrieval **100 %**, answer correct **100 %**, citations **100 %**, abstention **100 %** | ✅ |
 | Live handwritten PDF (`tools/e2e_system_design.py`, run 2) | **31 / 34** checks | ⚠️ vision quota ran out |
 | Live MP3 transcription (49 s) | WER **0.0 %**, 20 segments, processed in 30 s | ✅ |
 | Live MP4 transcription (45 s) | WER **0.8 %**, 17 segments, processed in 21 s | ✅ |
-| Live AI study material from recordings | not run | ❌ no working provider |
-| AI scorecard `--live` | not run | ❌ no working provider |
-| PostgreSQL, S3 | not run in this environment | ❌ unverified |
+| Live answer model (Groq) in the deployed container | `tools/llm_smoke.py` answered; deploy smoke 41 / 41 in `mode=ai` | ✅ |
+| Live AI study material from recordings | not run | ⚠️ not re-run with the working key |
+| AI scorecard `--live` | not run | ⚠️ not re-run with the working key |
+| PostgreSQL 16 + S3 (SeaweedFS) | contract + S3 tests pass; app in production mode on PostgreSQL + S3: smoke **41 / 41** | ✅ |
+| Fresh checkout following the README | install, `pip check`, server, smoke 41 / 41, pytest pass | ✅ |
 
 ```mermaid
-pie showData title pytest core (637 collected)
-    "Passed" : 631
-    "Skipped (need PostgreSQL / S3 / optional services)" : 6
+pie showData title pytest core (638 collected, PostgreSQL + S3 enabled)
+    "Passed" : 636
+    "Skipped (real speech fixtures / whisper-free environment)" : 2
 ```
 
 ## 2. Test suite by area
@@ -50,8 +52,6 @@ Notes:
 
 * In tests, model calls are **faked** (`NOTIV_AI_STUDY=off`, `NOTIV_VISION=off`, `NOTIV_OCR=off` in `conftest`, except in
   the tests that switch them on). They prove grounding, validation and plumbing, not AI quality.
-* Four legacy modules (`test_extractor_findings`, `test_job_queue`, `test_rag_engine`, `test_vector_store`) belong to the
-  old meeting/RAG prototype and are not collected (they need LangChain/Streamlit). They are not part of Notiv.
 
 ## 3. Format matrix detail (2026-10-27)
 
@@ -115,12 +115,16 @@ video + slides run.
 * the companion and focus timer persisting across reload;
 * the question bank;
 * the account page and sign out;
+* the landing top bar staying pinned while scrolling, every nav link, the current-section highlight;
+* notebook download: exactly one PDF button, a real PDF with readable content;
+* deleting a course with its lectures and a lecture from the library;
 * mobile layout for landing, auth and desk.
 
-Result: **15 / 15** before and after the last UI pass, console errors `[]`.
+Result: **18 / 18**, console errors `[]` (2026-11-17). The desk step checks that the top-bar
+navigation marks the current page. The landing step checks that the hero photograph loads at its original 735 × 412.
 
-An earlier browser suite (`tools/e2e_ui.py`, 47 / 47 on 2026-10-17) covered the previous markup and the since-removed
-OIDC flow; it is kept for reference.
+Earlier browser scripts (`e2e_ui.py`, `e2e_notebooks.py`, `e2e_notiv_library.py`, `verify_*_ui.py`) targeted the
+pre-redesign markup and the removed token sign-in; they were deleted on 2026-11-17 and remain in git history.
 
 ## 6b. Docker deployment smoke test
 
@@ -158,9 +162,9 @@ flowchart LR
 ```mermaid
 xychart-beta
     title "pytest: passing tests over time"
-    x-axis ["10-17", "10-23 OCR", "10-23 reflow", "10-23 LLM", "10-24 AI study", "10-26 media", "10-27 deploy", "10-31 docker"]
+    x-axis ["10-17", "10-23 OCR", "10-23 reflow", "10-23 LLM", "10-24 AI study", "10-26 media", "10-27 deploy", "10-31 docker", "11-17 audit"]
     y-axis "passed" 450 --> 650
-    line [496, 541, 553, 585, 612, 625, 627, 631]
+    line [496, 541, 553, 585, 612, 625, 627, 631, 636]
 ```
 
 | Date | Change | pytest | Other runs |
@@ -173,6 +177,7 @@ xychart-beta
 | 2026-10-26 | MP3 / MP4 study workflow | 625 passed | MP3 WER 0.0 %, MP4 WER 0.8 % |
 | 2026-10-27 | deploy audit, evaluation tools, UI polish | 627 passed, 6 skipped | e2e 15 / 15, matrix 33 / 33, offline AI 100 % |
 | 2026-10-31 | Docker image verified, hyphenated terms in Ask | 631 passed, 6 skipped | deployment smoke 41 / 41, offline AI 100 % |
+| 2026-11-17 | PDF-only export, course delete, audit (legacy removed, PostgreSQL + S3 verified) | 636 passed, 2 skipped | e2e 18 / 18, smoke 41 / 41 (SQLite and PostgreSQL + S3), live Groq |
 
 ## 8. Bugs found by evaluation runs (all have regression tests)
 
@@ -194,9 +199,8 @@ xychart-beta
 
 | Item | Why | How to verify |
 |---|---|---|
-| Live AI output (Ask with model, study material, AI quiz, vision) | OpenAI has no credits; the Groq key is rejected (401) | add a working key, run `tools/llm_smoke.py`, then `tools/eval_ai_study.py --live`, `tools/e2e_media.py both`, `tools/e2e_system_design.py <pdf>` |
+| Live AI quality (study material, AI quiz, vision) at scale | only the Groq answer chain was re-checked with the new key | add a working key, run `tools/llm_smoke.py`, then `tools/eval_ai_study.py --live`, `tools/e2e_media.py both`, `tools/e2e_system_design.py <pdf>` |
 | Full 39-page handwritten coverage | vision daily limit | as above |
-| PostgreSQL and S3 | services not available here | `bash tools/verify_sprint5.sh` with `docker-compose.sprint5.yml` |
 | SMTP password reset delivery | no relay configured | configure `NOTIV_SMTP_*`, request a reset |
 | Long and real-speech recordings | only ~45 s TTS tested | upload a real lecture recording |
 

@@ -1,7 +1,7 @@
 // Course page: the lectures in one course, concepts that recur across them, search across all of them, and practice over the whole course.
 import { $, h, clear, api, mountShell, pageError, skeletons, icon, plural, when, mmss, explain, toast, debounce, announce, notice, withBusy, stateChip, ApiError } from "/static/ui/core.js";
 import { citeLink } from "/static/ui/render.js";
-import { newLectureDialog } from "/static/ui/dialogs.js";
+import { newLectureDialog, deleteLecture, deleteCourse } from "/static/ui/dialogs.js";
 
 const CID = Number((location.pathname.match(/\/courses\/(\d+)/) || [])[1] || 0);
 const KIND = { flashcard: "Flashcards", short_answer: "Short answer", mcq: "Multiple choice" };
@@ -25,18 +25,24 @@ function draw() {
   const tabs = [["lectures", "Lectures"], ["concepts", "Concepts"], ["search", "Search"], ["practice", "Practice"]];
   clear(main, h("div", { class: "crumbs" }, h("a", { href: "/app", text: "Desk" }), h("span", { class: "sep", text: "/" }), h("span", { text: "Course" })),
     h("div", { class: "pagehead" }, h("div", { class: "titles" }, h("h1", { text: course.name }), h("p", { class: "lede", text: `${plural(course.lecture_count, "lecture")}, ${course.ready_count} ready.` })),
-      h("div", { class: "actions" }, h("button", { class: "btn primary", onclick: async () => { const id = await newLectureDialog({ courses: [course], courseId: course.id }); if (id) location.assign("/app/lectures/" + id); } }, icon("upload"), "Add a lecture"))),
+      h("div", { class: "actions" }, h("button", { class: "btn primary", onclick: async () => { const id = await newLectureDialog({ courses: [course], courseId: course.id }); if (id) location.assign("/app/lectures/" + id); } }, icon("upload"), "Add a lecture"),
+        h("button", { class: "btn danger", type: "button", onclick: async () => { if (await deleteCourse(course)) location.assign("/app?view=library"); } }, icon("trash"), "Delete course"))),
     h("div", { class: "tabs", role: "tablist", "aria-label": "Course" }, ...tabs.map(([id, l]) => h("button", { class: "tab", role: "tab", id: "ct-" + id, "aria-selected": tab === id, "aria-controls": "cpanel", onclick: () => { tab = id; draw(); } }, l))),
     h("div", { id: "cpanel", role: "tabpanel", "aria-labelledby": "ct-" + tab, tabindex: "0", style: { paddingTop: "var(--s5)" } }));
   ({ lectures, concepts, search, practice })[tab]($("#cpanel"));
 }
 
 function lectures(p) {
-  const rows = overview.lectures;
+  // every lecture in the course (processing or failed ones too), with study counts where the overview has them
+  const stats = new Map((overview.lectures || []).map(l => [l.lecture_id, l]));
+  const rows = (overview.lectureRows || []).map(r => ({ ...(stats.get(r.id) || {}), lecture_id: r.id, title: r.title || (stats.get(r.id) || {}).title || "Untitled lecture", status: r.status }));
+  for (const l of overview.lectures || []) if (!rows.some(r => r.lecture_id === l.lecture_id)) rows.push(l);
   if (!rows.length) return clear(p, h("div", { class: "empty" }, h("h2", { text: "No lectures in this course yet" }), h("p", { text: "Add a recording or slides and Notiv will process them here." })));
-  const byId = new Map((overview.lectureRows || []).map(l => [l.id, l]));
-  clear(p, h("ul", { class: "ledger" }, ...rows.map(l => { const r = byId.get(l.lecture_id);
-    return h("li", null, h("a", { class: "row-link", href: "/app/lectures/" + l.lecture_id }, h("span", null, h("span", { class: "row-title", text: l.title }), h("br"), h("span", { class: "faint", text: `${plural(l.knowledge_items, "study note")}, ${plural(l.study_items, "practice item")}` + (l.stale ? ", out of date" : "") })), r ? stateChip(r.status === "done" ? "done" : r.status) : h("span"))); })));
+  clear(p, h("ul", { class: "ledger" }, ...rows.map(l => {
+    const sub = l.status && l.status !== "done" ? "Not processed yet" : `${plural(l.knowledge_items || 0, "study note")}, ${plural(l.study_items || 0, "practice item")}` + (l.stale ? ", out of date" : "");
+    return h("li", { class: "lec-li" }, h("a", { class: "row-link", href: "/app/lectures/" + l.lecture_id }, h("span", null, h("span", { class: "row-title", text: l.title }), h("br"), h("span", { class: "faint", text: sub })), l.status ? stateChip(l.status === "done" ? "done" : l.status) : h("span")),
+      h("button", { class: "btn sm quiet row-del", type: "button", title: "Delete lecture", "aria-label": "Delete " + l.title, onclick: async () => { if (await deleteLecture({ id: l.lecture_id, title: l.title })) location.reload(); } }, icon("trash")));
+  })));
 }
 
 async function concepts(p) {

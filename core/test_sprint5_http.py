@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from unittest import mock
 
-from core.lecture import obs, ratelimit
+from core.lecture import ratelimit
 from core.test_study_api import ALICE, BOB, W, ApiBase
 
 HUGE = "99999999999999999999999"
@@ -31,7 +31,7 @@ def env(**kv):
 
 class TestBug1OversizedIds(ApiBase):
     def test_huge_and_zero_ids_are_404_not_500(self):
-        for path in (f"/lectures/{HUGE}/overview", f"/lectures/{HUGE}/knowledge", f"/lectures/0/overview",
+        for path in (f"/lectures/{HUGE}/overview", f"/lectures/{HUGE}/knowledge", "/lectures/0/overview",
                      f"/lectures/{self.lid}/evidence/{HUGE}", f"/study/items/{HUGE}", f"/study/sessions/{HUGE}",
                      f"/courses/{HUGE}/overview", f"/lectures/{HUGE}/study/items"):
             code, body, _ = self.call("GET", path)

@@ -30,6 +30,8 @@ class LectureRepository(ABC):
     @abstractmethod
     def get_course(self, course_id: int) -> Optional[dict]: ...
 
+    def delete_course_row(self, course_id: int) -> None: ...
+
     @abstractmethod
     def list_courses_for_user(self, user_id: int, limit: int = 100, offset: int = 0) -> List[dict]: ...
 
@@ -312,6 +314,10 @@ class SqliteLectureRepository(LectureRepository):
     def get_course(self, course_id: int) -> Optional[dict]:
         self._ensure()
         return store.get_course(course_id)
+
+    def delete_course_row(self, course_id: int) -> None:
+        self._ensure()
+        return store.delete_course_row(course_id)
 
     def list_courses_for_user(self, user_id: int, limit: int = 100, offset: int = 0) -> List[dict]:
         self._ensure()

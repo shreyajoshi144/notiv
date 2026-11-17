@@ -1,17 +1,13 @@
 """FastAPI dependencies shared by the API routers.
 
-Deliberately imports nothing from the legacy meeting/chat stack (routes_chat, meeting_service, rag_service,
-core.rag_engine, ...), so the lecture API can be imported and served without it.
-
-UNVERIFIED in the authoring sandbox: FastAPI is not installed there. core/test_sprint5_fastapi.py runs these paths when
-FastAPI + httpx are available (CI / your machine) and SKIPS otherwise.
+Covered by core/test_sprint5_fastapi.py and core/test_auth_cookie_integration.py.
 """
 from typing import Optional
 
 from fastapi import Header, HTTPException, Request, status
 
 from core.lecture import ratelimit, settings
-from core.lecture.errors import (ConflictError, NotFoundError, NotReadyError, NotivError, QuotaError, RateLimitError,
+from core.lecture.errors import (ConflictError, NotFoundError, NotReadyError, QuotaError, RateLimitError,
                                  ValidationError)
 from server.api.guards import client_ip, policy_for
 from server.auth_tokens import AuthError, verify_from_env

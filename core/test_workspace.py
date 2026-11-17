@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 import unittest
 
-from core.lecture import insights, jobs, pipeline
+from core.lecture import insights, pipeline
 from core.lecture.align import Segment
 from core.lecture.errors import NotFoundError, NotReadyError, ValidationError
 from core.lecture.make_test_lecture import make_lecture, make_text_pdf

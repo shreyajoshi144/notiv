@@ -27,3 +27,10 @@ _build_tools/
 .idea/
 .vscode/
 .DS_Store
+
+# deployment secrets (never commit)
+*.env
+!.env.example
+
+# Local agent / IDE settings
+.claude/

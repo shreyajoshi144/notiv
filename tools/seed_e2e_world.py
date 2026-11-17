@@ -22,7 +22,6 @@ for p in (ROOT, os.path.join(ROOT, "core"), os.path.join(ROOT, "backend")):
 
 from core import study_fixtures as F                                           # noqa: E402
 from core.lecture import config, pipeline                                     # noqa: E402
-from core.lecture.align import Segment                                        # noqa: E402
 from core.lecture.assets import AssetService                                  # noqa: E402
 from core.lecture.make_test_lecture import make_lecture, make_text_pdf        # noqa: E402
 from core.lecture.service import LectureService                               # noqa: E402

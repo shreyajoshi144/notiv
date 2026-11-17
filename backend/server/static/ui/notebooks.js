@@ -193,7 +193,7 @@ function itemView(p, item) {
   const isNote = item.item_type === "note";
   const status = h("div", { class: "status", role: "status", "aria-live": "polite", text: isNote ? "Saved" : "" });
   const view = h("div", { class: "item-view" });
-  const exportMenu = menuButton({ cls: "btn sm", content: [icon("download"), "Export"], build: close => ["md", "txt", "csv", "json"].map(f => h("button", { type: "button", onclick: async () => { close(); try { await download(`/notebooks/${N.id}/items/${item.id}/export?format=${f}`, "notiv-item." + f); toast("Downloaded."); } catch (e) { toast(explain(e, "export"), "err"); } } }, { md: "Markdown (.md)", txt: "Plain text (.txt)", csv: "CSV (.csv)", json: "JSON (.json)" }[f])) });
+  const exportMenu = h("button", { class: "btn sm", type: "button", onclick: e => withBusy(e.currentTarget, async () => { try { const name = await download(`/notebooks/${N.id}/items/${item.id}/export?format=pdf`, "notiv-item.pdf"); toast("Downloaded " + name + "."); } catch (x) { toast(explain(x, "download the PDF"), "err"); } }) }, icon("download"), "Download PDF");
   const bar = h("div", { class: "bar-top" }, h("a", { class: "btn sm quiet", href: "#material" }, icon("back"), "All notes and study material"), h("span", { class: "spacer", style: { flex: 1 } }), exportMenu,
     h("button", { class: "btn sm", onclick: async () => { try { const c = await api(`/notebooks/${N.id}/items`, { method: "POST", json: { item_type: item.item_type, title: (item.title + " (copy)").slice(0, 240), content: item.content, provenance: item.provenance || [] } }); await reload(); go("material", c.id); toast("Duplicated."); } catch (e) { toast(explain(e, "duplicate"), "err"); } } }, icon("copy"), "Duplicate"),
     h("button", { class: "btn sm danger", onclick: async () => { const ok = await confirmDialog({ title: "Delete this item?", body: `“${item.title}” will be removed from the notebook.`, confirm: "Delete", danger: true }); if (!ok) return; try { await api(`/notebooks/${N.id}/items/${item.id}`, { method: "DELETE" }); await reload(); go("material"); toast("Deleted."); } catch (e) { toast(explain(e, "delete"), "err"); } } }, icon("trash"), "Delete"));
@@ -244,10 +244,10 @@ async function askTab(p) { await ensureLectures(); N.teardown = mountAsk(p, { nb
 function canvasTab(p) { N.teardown = mountCanvas(p, { nb: N.nb, reload, openItemPicker: () => N.nb.items.filter(i => i.item_type === "mind_map") }); }
 
 /* ── export and share ── */
-const FORMATS = [["md", "Markdown", "Headings and sources, readable anywhere"], ["docx", "Word", "An editable .docx"], ["pdf", "PDF", "For reading and printing"], ["pptx", "PowerPoint", "One slide per item"], ["txt", "Plain text", "No formatting"], ["csv", "CSV", "Items and cards as rows"], ["json", "JSON", "Everything, machine-readable"], ["svg", "Canvas as SVG", "The brainstorm canvas as a picture"]];
 async function share(p) {
   const nb = N.nb;
-  const fm = h("div", { class: "formats" }, ...FORMATS.map(([f, l, d]) => h("button", { class: "format", type: "button", onclick: async e => { const b = e.currentTarget; b.disabled = true; try { const name = await download(`/notebooks/${nb.id}/export?format=${f}`, "notiv-notebook." + f); toast("Downloaded " + name + "."); } catch (x) { toast(explain(x, "export"), "err"); } finally { b.disabled = false; } } }, h("b", { text: l }), h("span", { text: d }))));
+  const fm = h("div", { class: "formats" }, h("button", { class: "format", type: "button", onclick: e => withBusy(e.currentTarget, async () => { try { const name = await download(`/notebooks/${nb.id}/export?format=pdf`, "notiv-notebook.pdf"); toast("Downloaded " + name + "."); } catch (x) { toast(explain(x, "download the PDF"), "err"); } }) },
+    h("b", null, icon("download"), " Download PDF"), h("span", { text: "Every note and study item laid out for reading and printing: summaries, concepts, flashcards, the quiz with an answer key, concept maps and the canvas, with their sources." })));
   const result = h("div", { "aria-live": "polite" });
   const list = h("div");
   const exp = h("select", { id: "sh-exp" }, ...[["", "Never expires"], ["86400", "1 day"], ["604800", "7 days"], ["2592000", "30 days"]].map(([v, l]) => h("option", { value: v }, l)));
@@ -265,7 +265,7 @@ async function share(p) {
           st === "active" ? h("button", { class: "btn sm danger", onclick: async () => { const ok = await confirmDialog({ title: "Revoke this link?", body: "Anyone using it will immediately lose access.", confirm: "Revoke link", danger: true }); if (!ok) return; try { await api(`/notebooks/${nb.id}/shares/${s.id}`, { method: "DELETE" }); toast("Link revoked."); loadShares(); } catch (x) { toast(explain(x, "revoke"), "err"); } } }, "Revoke") : null)); })) : h("p", { class: "faint", text: "No links yet." })); }
     catch (x) { clear(list, notice("err", h("p", { text: explain(x, "load your links") }))); }
   }
-  clear(p, h("div", { class: "two" }, h("section", { "aria-labelledby": "ex-h" }, h("div", { class: "section-head" }, h("h2", { id: "ex-h", text: "Export" })), h("p", { class: "muted", style: { paddingTop: "12px" }, text: "Download this whole notebook: its notes, study material, sources and (for SVG) the canvas." }), fm),
+  clear(p, h("div", { class: "two" }, h("section", { "aria-labelledby": "ex-h" }, h("div", { class: "section-head" }, h("h2", { id: "ex-h", text: "Export" })), h("p", { class: "muted", style: { paddingTop: "12px" }, text: "Download this whole notebook as one PDF." }), fm),
     h("section", { "aria-labelledby": "sh-h" }, h("div", { class: "section-head" }, h("h2", { id: "sh-h", text: "Share" })),
       h("p", { class: "muted", style: { paddingTop: "12px" }, text: "A link shows this notebook's notes, study material and canvas, read-only. It never exposes your lectures, recordings or personal lecture notes." }),
       h("div", { class: "field" }, h("label", { for: "sh-exp", text: "Link lasts" }), exp), make, result, h("h3", { style: { margin: "28px 0 6px" }, text: "Your links" }), list)));

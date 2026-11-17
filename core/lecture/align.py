@@ -1,6 +1,6 @@
 """Temporal alignment of transcript segments to the slide timeline."""
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from .slide_match import TimelineEntry
 

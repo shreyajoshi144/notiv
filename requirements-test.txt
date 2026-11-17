@@ -5,4 +5,3 @@ pytest-timeout>=2.2
 reportlab>=4.0
 pillow>=10
 pypdf>=4
-python-docx>=1.1

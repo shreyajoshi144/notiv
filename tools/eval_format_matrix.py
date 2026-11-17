@@ -88,7 +88,7 @@ def pdf_reportlab(path, pages, rotate=None, sizes=None, image_only=False):
 
 def pptx_make(path, slides, hidden=(), table=False, image_only=False, group=False):
     from pptx import Presentation
-    from pptx.util import Inches, Pt
+    from pptx.util import Inches
     prs = Presentation()
     for i, (title, body) in enumerate(slides):
         s = prs.slides.add_slide(prs.slide_layouts[5 if (table or image_only or group) else 1])
@@ -265,7 +265,6 @@ CLEAR = re.compile(r"(not a|unsupported|password|damaged|unreadable|no audio|no 
 
 
 def run_case(c, work):
-    from core.lecture import validation
     from core.lecture.errors import ValidationError
     from core.lecture.testkit import Env
     t0 = time.monotonic()

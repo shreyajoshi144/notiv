@@ -280,7 +280,7 @@ class TestStaticWiring(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_FASTAPI, "fastapi/httpx not installed")
 class TestFastApiStudyRoutes(ApiBase):
-    """Runs only where FastAPI is installed (NOT run in the authoring sandbox)."""
+    """Runs only where FastAPI is installed (requires fastapi + httpx from requirements-test.txt)."""
 
     def test_routes_registered_validated_and_authorized(self):
         from fastapi.testclient import TestClient

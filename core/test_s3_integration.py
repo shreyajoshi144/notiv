@@ -1,7 +1,7 @@
 """S3 integration test — SKIPPED unless NOTIV_TEST_S3_ENDPOINT + NOTIV_TEST_S3_BUCKET (+ AWS creds env) are set and boto3 is
-installed. NOT run in the authoring sandbox. Against MinIO: docker compose -f docker-compose.sprint5.yml up -d minio, create
-a private bucket `notiv-test`, export NOTIV_TEST_S3_ENDPOINT=http://localhost:59000 NOTIV_TEST_S3_BUCKET=notiv-test
-AWS_ACCESS_KEY_ID=notiv AWS_SECRET_ACCESS_KEY=notivnotiv."""
+installed. Locally: docker compose -f docker-compose.sprint5.yml up -d (creates the private bucket `notiv-test`), then export
+NOTIV_TEST_S3_ENDPOINT=http://localhost:59000 NOTIV_TEST_S3_BUCKET=notiv-test AWS_ACCESS_KEY_ID=notiv
+AWS_SECRET_ACCESS_KEY=notivnotiv AWS_DEFAULT_REGION=us-east-1."""
 import os
 import unittest
 import urllib.error

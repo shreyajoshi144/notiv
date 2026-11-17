@@ -106,7 +106,6 @@ def run(pdf, port, env, work):
     check("low-quality extraction reported to the user", "low_quality_text" in codes, ", ".join(codes))
     if ps.get("unreadable_pages"):
         check("unreadable pages reported", "pages_without_text" in codes, str(ps["unreadable_pages"]))
-    ev = c.get(f"/lectures/{lid}/evidence").json() if c.get(f"/lectures/{lid}/evidence").status_code == 200 else None
     check("AI study material generated", an.get("status") == "ok", an.get("message") or an.get("status") or "")
 
     print("\n== summary")

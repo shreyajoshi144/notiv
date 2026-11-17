@@ -1,6 +1,6 @@
 // Lecture viewer: media + slide-aware ruler + slides on the stage; transcript, evidence, moments, summary, search, ask, study and notes in the margin.
 import { $, $$, h, clear, api, mountShell, pageError, skeletons, icon, plural, when, mmss, duration, stateChip, explain, toast, debounce, announce, confirmDialog, withBusy, copyText, notice, menuButton, formDialog, ApiError, onKeyActivate } from "/static/ui/core.js";
-import { addToNotebookDialog, saveToNotebookDialog } from "/static/ui/dialogs.js";
+import { addToNotebookDialog, saveToNotebookDialog, deleteLecture } from "/static/ui/dialogs.js";
 import { mountAsk, mountStudy, mountNotes } from "/static/ui/lecture-tools.js";
 
 const LID = Number((location.pathname.match(/\/lectures\/(\d+)/) || [])[1] || 0);
@@ -29,14 +29,13 @@ function headerBlock(ov) {
   const menu = menuButton({ cls: "btn quiet", content: [icon("more", "more"), h("span", { class: "sr", text: "More actions" })], build: close => [
     h("button", { type: "button", onclick: () => { close(); $("#assetPicker").click(); } }, icon("upload"), "Upload another source"),
     h("button", { type: "button", onclick: () => { close(); copyMoment(); } }, icon("link"), "Copy link to this moment"),
-    h("div", { class: "sep" }),
-    h("button", { type: "button", onclick: async () => { close(); const ok = await confirmDialog({ title: "Delete this lecture?", body: `“${ov.title}” — the recording, slides, transcript, notes and study history are permanently deleted. Notebooks that linked it keep what you already saved.`, confirm: "Delete lecture", danger: true }); if (!ok) return;
-      try { await api("/lectures/" + LID, { method: "DELETE" }); location.assign("/app"); } catch (e) { toast(explain(e, "delete the lecture"), "err"); } } }, icon("trash"), "Delete lecture")] });
+  ] });
   return h("div", { class: "lec-head" },
     h("div", { class: "crumbs" }, h("a", { href: "/app", text: "Desk" }), ov.course_id ? [h("span", { class: "sep", text: "/" }), h("a", { href: "/app/courses/" + ov.course_id, text: S.course || "Course" })] : null),
     h("div", { class: "pagehead", style: { margin: 0 } }, h("div", { class: "titles" }, h("h1", { text: ov.title || "Untitled lecture" }), h("div", { class: "kv", style: { marginTop: "8px" } }, stateChip(ov.state === "done" || ov.ready ? "done" : ov.state), ov.duration ? h("span", { text: duration(ov.duration) }) : null, ov.created_at ? h("span", { text: "Added " + when(ov.created_at) }) : null)),
       h("div", { class: "actions" }, ov.ready ? h("button", { class: "btn", onclick: () => addToNotebookDialog({ lectureId: LID, lectureTitle: ov.title }) }, icon("book"), "Add to notebook") : null,
-        h("button", { class: "btn", onclick: () => $("#assetPicker").click() }, icon("upload"), "Upload source"), menu)),
+        h("button", { class: "btn", onclick: () => $("#assetPicker").click() }, icon("upload"), "Upload source"),
+        h("button", { class: "btn danger", type: "button", onclick: async () => { if (await deleteLecture({ id: LID, title: ov.title })) location.assign("/app"); } }, icon("trash"), "Delete"), menu)),
     h("input", { id: "assetPicker", type: "file", hidden: true, accept: ".pdf,.pptx,.mp3,.mp4", onchange: uploadAsset }));
 }
 async function uploadAsset(e) {

@@ -1,17 +1,21 @@
-# Local verification infrastructure (UNVERIFIED here: Docker daemon unavailable in the authoring sandbox).
-#   docker compose -f docker-compose.sprint5.yml up -d postgres minio
+# Local PostgreSQL + private S3 for the integration tests (test-only credentials; never use them anywhere else).
+#   docker compose -f docker-compose.sprint5.yml up -d
+#   NOTIV_TEST_DATABASE_URL=postgresql://postgres:notiv@localhost:55432/notiv \
+#   NOTIV_TEST_S3_ENDPOINT=http://localhost:59000 NOTIV_TEST_S3_BUCKET=notiv-test \
+#   AWS_ACCESS_KEY_ID=notiv AWS_SECRET_ACCESS_KEY=notivnotiv AWS_DEFAULT_REGION=us-east-1 bash tools/verify_sprint5.sh
+# S3 is SeaweedFS (MinIO no longer publishes public images); anonymous requests are denied.
 services:
   postgres:
     image: postgres:16
     environment: {POSTGRES_PASSWORD: notiv, POSTGRES_DB: notiv}
     ports: ["55432:5432"]
     healthcheck: {test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 3s, retries: 20}
-  minio:
-    image: minio/minio
-    command: server /data
-    environment: {MINIO_ROOT_USER: notiv, MINIO_ROOT_PASSWORD: notivnotiv}
-    ports: ["59000:9000"]
-  minio-init:                       # creates the PRIVATE test bucket (no anonymous access policy is set)
-    image: minio/mc
-    depends_on: [minio]
-    entrypoint: ["/bin/sh", "-c", "sleep 3; mc alias set l http://minio:9000 notiv notivnotiv && mc mb --ignore-existing l/notiv-test"]
+  s3:
+    image: chrislusf/seaweedfs
+    command: server -s3 -s3.config=/etc/s3.json -dir=/data
+    volumes: ["./tools/seaweedfs-s3.json:/etc/s3.json:ro"]
+    ports: ["59000:8333"]
+  s3-init:                          # creates the PRIVATE test bucket
+    image: chrislusf/seaweedfs
+    depends_on: [s3]
+    entrypoint: ["/bin/sh", "-c", "sleep 10; echo 's3.bucket.create -name notiv-test' | weed shell -master=s3:9333"]

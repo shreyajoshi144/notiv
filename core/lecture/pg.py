@@ -1,11 +1,8 @@
 """PostgreSQL adapter for the store (selected by NOTIV_DATABASE_URL=postgresql://...).
 
-STATUS: UNVERIFIED against a running application. psycopg is not installable in the authoring sandbox, so:
-  * `translate()` (pure SQL rewriting) IS unit-tested (core/test_pg_translate.py);
-  * the PostgreSQL DDL (migrations/postgres/*.sql) WAS applied to a real PostgreSQL 16 server with psql;
-  * everything that needs a live connection (PgConnection, search, job claiming) has NOT been run here.
-core/test_pg_contract.py runs the shared store contract against a real server when NOTIV_TEST_DATABASE_URL is set
-(it SKIPS otherwise). Treat PostgreSQL support as unproven until that test passes in your environment.
+Verified against PostgreSQL 16 (2026-11-17): core/test_pg_contract.py (store contract, job claiming, tsvector search,
+course and lecture deletion) and the full deploy smoke test with the app on PostgreSQL + S3. `translate()` is
+unit-tested in core/test_pg_translate.py. The contract test SKIPS unless NOTIV_TEST_DATABASE_URL is set.
 
 Design: the store keeps its sqlite3-style call sites (`c.execute(sql, params)`, `?` placeholders, `row["col"]`,
 `cur.lastrowid`, `with c:`). PgConnection translates them so store/study_store need no second implementation. FTS5 is
@@ -13,8 +10,7 @@ replaced by tsvector tables (see migration 0001): only the two search queries di
 """
 import os
 import re
-import threading
-from typing import Optional, Sequence
+from typing import Sequence
 
 # conflict targets for "INSERT OR REPLACE" (SQLite) -> "ON CONFLICT (...) DO UPDATE" (PostgreSQL)
 _PK = {"workspace_members": ("workspace_id", "user_id"), "lecture_insight_meta": ("lecture_id",),

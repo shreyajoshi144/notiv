@@ -1,15 +1,13 @@
 """Local email/password authentication. Password reset email requires explicitly configured SMTP."""
-import hashlib, hmac, os, secrets, smtplib, ssl, time
+import hashlib, hmac, secrets, smtplib, ssl, time
 from email.message import EmailMessage
-from typing import Optional
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from core.lecture import store, ratelimit
 from core.lecture.errors import RateLimitError
 from server.api.guards import client_ip
-from server.auth_sessions import create, revoke, clear, digest
-from server.auth_tokens import create_token
+from server.auth_sessions import create, clear, digest
 from core.lecture import settings
 
 router = APIRouter(tags=["auth"])

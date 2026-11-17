@@ -173,7 +173,7 @@ def _pg_url() -> str:
     return u if settings.is_postgres_url(u) else ""
 
 
-DIALECT = "postgres" if _pg_url() else "sqlite"      # PostgreSQL path is UNVERIFIED here (see core/pg.py)
+DIALECT = "postgres" if _pg_url() else "sqlite"      # see core/lecture/pg.py
 _pg_migrated = False
 
 
@@ -254,6 +254,19 @@ def create_course(owner_id: int, name: str, workspace_id: Optional[int] = None) 
 
 def get_course(course_id: int) -> Optional[dict]:
     return _row(conn().execute("SELECT * FROM courses WHERE id=?", (course_id,)).fetchone())
+
+
+def delete_course_row(course_id: int) -> None:
+    """Removes a course and its course-scoped study sessions. Its lectures must already be deleted."""
+    c = conn()
+    with c:
+        if c.execute("SELECT 1 FROM lectures WHERE course_id=? LIMIT 1", (course_id,)).fetchone():
+            raise RuntimeError("course still has lectures")
+        sess = "SELECT id FROM study_sessions WHERE scope_type='course' AND scope_id=?"
+        c.execute(f"DELETE FROM study_attempts WHERE session_id IN ({sess})", (course_id,))
+        c.execute(f"DELETE FROM study_session_items WHERE session_id IN ({sess})", (course_id,))
+        c.execute("DELETE FROM study_sessions WHERE scope_type='course' AND scope_id=?", (course_id,))
+        c.execute("DELETE FROM courses WHERE id=?", (course_id,))
 
 
 def list_courses_for_user(user_id: int, limit: int = 100, offset: int = 0) -> List[dict]:

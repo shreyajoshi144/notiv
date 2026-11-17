@@ -2,17 +2,13 @@
 
     PYTHONPATH=backend:. uvicorn server.main:app
 
-Mounts the lecture router only. The legacy meeting/chat router (server.api.routes_chat) is deliberately NOT mounted:
-it depends on modules that are absent from this checkout and must not be able to break the lecture API at import time.
 
 Production (NOTIV_ENV=production): refuses to start on weak/missing secrets, SQLite or local storage (see
 core.lecture.settings); OpenAPI docs are off; /metrics needs NOTIV_METRICS_ENABLED=1 + NOTIV_METRICS_TOKEN.
 Processing: run `python -m core.lecture.worker` as its own process (the API also starts an in-process worker on the first
 /lectures/{id}/process request unless NOTIV_INPROCESS_WORKER=0).
 
-UNVERIFIED in the authoring sandbox (FastAPI not installable). The hardening middleware itself is pure ASGI and IS
-covered by core/test_sprint5_ops.py::TestAsgiMiddleware; the wiring below is covered by core/test_sprint5_fastapi.py,
-which SKIPS when FastAPI/httpx are missing.
+The hardening middleware is covered by core/test_sprint5_ops.py and the wiring below by core/test_sprint5_fastapi.py.
 """
 import hmac
 import os

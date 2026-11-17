@@ -1,13 +1,12 @@
 """FastAPI routes for personal notes. Thin wrappers over notes_handlers (the same functions the stdlib dev server and the
-tests call). NOTE: written against FastAPI but NOT executed in the authoring sandbox (FastAPI isn't installable there);
-core/test_sprint5_fastapi.py / test_notes.py's FastAPI class SKIP without it."""
+tests call). Covered by core/test_notes.py and core/test_sprint5_fastapi.py."""
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Query
 from pydantic import BaseModel, Field
 
 from server.api import notes_handlers as h
-from server.api.deps import get_current_user, http_error
+from server.api.deps import get_current_user
 from server.api.workspace_handlers import ApiError
 
 router = APIRouter()

@@ -23,7 +23,6 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from core.lecture import authz, config, obs, ops_store, ratelimit, settings
 from core.lecture.errors import NotFoundError, RateLimitError
-from core.lecture.jobs import JobService
 from core.lecture.pipeline import make_job_service
 from core.lecture.storage import LocalStorage, content_type_for, disposition_for
 from server.api import ask_handlers as A
@@ -113,7 +112,7 @@ def _type_ok(t, v) -> bool:
 def check_body(fn, n_url_args: int, body: dict) -> None:
     """422 (never a 500) for a missing REQUIRED field, an unknown field, or a wrongly-typed field."""
     params = list(inspect.signature(fn).parameters.values())[1:]           # drop user_id
-    url_part, rest = params[:n_url_args], params[n_url_args:]
+    rest = params[n_url_args:]
     allowed = {p.name for p in rest}
     unknown = set(body) - allowed
     if unknown:

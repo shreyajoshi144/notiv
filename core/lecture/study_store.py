@@ -10,7 +10,7 @@ user deletions (tombstones) are never overwritten or resurrected.
 import json
 import re
 import time
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence
 
 from .store import INTEGRITY_ERRORS, conn
 

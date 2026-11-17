@@ -1,5 +1,5 @@
-"""FastAPI wiring tests — SKIPPED unless fastapi + httpx (+ python-multipart) are installed. NOT run in the authoring sandbox
-=> the FastAPI app (server.main, deps, routes_lectures) is UNVERIFIED until this passes in your environment."""
+"""FastAPI wiring tests for server.main, deps and routes_lectures. Need fastapi + httpx + python-multipart
+(requirements-test.txt); SKIPPED without them."""
 import os
 import unittest
 
