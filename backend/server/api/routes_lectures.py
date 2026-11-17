@@ -1,15 +1,13 @@
 """Courses, lectures, assets, jobs, viewer data, search, evidence, corrections, Ask.
 
-Thin HTTP layer: every handler resolves the caller (`get_current_user`, the
-same dependency routes_chat.py uses — NOT present in this checkout), then
+Thin HTTP layer: every handler resolves the caller (`get_current_user`), then
 calls services that enforce workspace-scoped authorization (core.lecture.authz).
 NotFoundError -> 404 for both "missing" and "not yours".
 
 Register:  app.include_router(routes_lectures.router)
 
-NOTE: written against FastAPI but NOT executed in the authoring sandbox (FastAPI isn't installable there) =>
-UNVERIFIED. The services underneath are covered by core/test_foundation.py, core/test_lecture_pipeline.py and
-core/test_sprint5_ops.py; core/test_sprint5_fastapi.py exercises these routes when FastAPI is available.
+Tests: services in core/test_foundation.py, core/test_lecture_pipeline.py, core/test_sprint5_ops.py; the routes
+themselves in core/test_sprint5_fastapi.py, core/test_library_api.py and tools/smoke_deploy.py.
 
 Sprint 5: Idempotency-Key on create/process, quotas, audit log, per-route validation limits, domain-error mapping
 (deps.http_error), hardened /files route (server-decided content type, nosniff, defensive signature check).
@@ -19,13 +17,13 @@ import shutil
 import tempfile
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 import server.api.ask_handlers as ask_handlers
 from server.api.deps import get_current_user, http_error
-from core.lecture import authz, config, corrections, idempotency, obs, ops_store, quotas, settings, validation, worker
+from core.lecture import authz, config, corrections, idempotency, ops_store, quotas, settings, validation, worker
 from core.lecture.assets import AssetService
 from core.lecture.errors import NotivError, NotFoundError, ValidationError
 from core.lecture.storage import LocalStorage, content_type_for, disposition_for
@@ -33,7 +31,6 @@ from core.lecture.evidence import EvidenceService
 from core.lecture.jobs import JobService
 from core.lecture.pipeline import make_job_service
 from core.lecture.service import LectureService
-from core.lecture.storage import LocalStorage
 
 router = APIRouter(tags=["lectures"])
 
@@ -75,7 +72,6 @@ _ID = dict(ge=1, le=2 ** 63 - 1)
 @router.get("/courses")
 def list_courses(limit: int = 100, offset: int = 0, user: dict = Depends(get_current_user)):
     """Return only courses in workspaces the authenticated user can access."""
-    from fastapi import Query
     if limit < 1 or limit > 200 or offset < 0:
         raise HTTPException(422, "limit must be 1..200 and offset must be non-negative")
     repo, _, _, _ = _svc()
@@ -123,6 +119,16 @@ def create_course(body: CourseIn, response: Response, user: dict = Depends(get_c
         ops_store.audit(user["id"], "course.create", "course", cid)
         return 201, {"course_id": cid}
     return _idem(user, "course.create", idempotency_key, body.model_dump(), work, response)
+
+
+@router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_course(course_id: int, user: dict = Depends(get_current_user)):
+    """Deletes the course and every lecture in it, with their files and study history."""
+    _, _, _, assets = _svc()
+    try:
+        assets.delete_course(user["id"], course_id)
+    except NotFoundError as e:
+        raise _nf(e)
 
 
 @router.post("/lectures", status_code=status.HTTP_201_CREATED)

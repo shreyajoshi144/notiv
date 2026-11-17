@@ -2,7 +2,7 @@
 
 How Notiv was built, sprint by sprint. Each sprint built on the previous one without rewriting it: the evidence model,
 authorization, storage and durable jobs from Sprint 1 are still the base. Per-release changes are in the
-[changelog](../CHANGELOG.md).
+[changelog](CHANGELOG.md).
 
 ```mermaid
 timeline
@@ -23,6 +23,7 @@ timeline
         Sprint 11 : AI study for PDF / PPTX : Vision re-read, AI summaries, mind map
         Sprint 12 : Recordings : MP3 / MP4 through the same AI pipeline
         Sprint 13 : Launch readiness : Evaluation tools, study place, UI polish
+        Sprint 14 : Deploy and redesign : Docker verified, Daybreak UI
 ```
 
 ---
@@ -88,7 +89,7 @@ timeline
 ## Sprint 7 — Notebooks
 
 * Notebooks with sources, notes, generated items and a canvas with connections (migration 0004).
-* Exports: JSON, Markdown, TXT, CSV, SVG, PDF, DOCX, PPTX.
+* Exports: JSON, Markdown, TXT, CSV, SVG, PDF, DOCX, PPTX (reduced to PDF only in Sprint 14).
 * Read-only share links (SHA-256 token hashes, expiry, revocation, no-index page).
 * Lecture picker, drawn canvas connections, idempotent source linking.
 
@@ -153,8 +154,26 @@ Regression target: a 39-page handwritten system-design PDF with a garbled text l
   glassmorphism or backdrop blur.
 * Production gate allows single-instance SQLite / local storage only with explicit overrides.
 
+## Sprint 14 — Deploy and redesign (2026-10-31 → 11-04)
+
+* Docker image built and smoke-tested (41 / 41 behind a simulated HTTPS proxy); three deploy blockers fixed.
+* An interim "Ink & Red Pencil" iOS-style pass was replaced by **Daybreak**, following the reference designs:
+  * a cinematic, light landing built on the hero photograph;
+  * a canvas workspace: top bar, dotted ground, floating Layers panel and dock;
+  * a text-only wordmark and a robot companion.
+* Landing screenshots are captured by the browser e2e, so they always show the current UI.
+* New docs: Deployment, Design system.
+* Downloads are **PDF only**: one laid-out PDF per notebook or item (summaries, concepts, flashcard table, quiz with
+  answer key, concept map drawn, canvas page, source labels). The seven raw formats were removed; reportlab moved into
+  the production requirements (the Docker image had no PDF export before).
+* Delete a course (with its lectures) or a lecture from the library, the course page and the lecture page.
+* The landing top bar stays pinned while scrolling, turns solid past the hero and marks the section in view.
+
+* Pre-release audit (2026-11-17): the unused legacy meeting/RAG prototype and six outdated browser scripts removed;
+  PostgreSQL 16 + S3 verified (contract tests and the full deploy smoke test); `.dockerignore` stopped copying `*.env`
+  files into the image.
+
 ## What is next
 
-* Run the live checks with a working provider key (see [Results and testing §9](RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying)).
-* Verify PostgreSQL, S3 and the Docker image with `tools/verify_sprint5.sh`.
-* Test long, real-speech recordings.
+* Re-run the live AI checks with the working key (`tools/eval_ai_study.py --live`, `tools/e2e_media.py both`).
+* Test long, real-speech recordings and SMTP password-reset delivery.

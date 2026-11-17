@@ -220,7 +220,7 @@ def detect_conflict(terms: List[str], chunks: List[dict]) -> Optional[dict]:
         if c["context"]:
             continue
         for sent in retrieval.split_sentences(c["text"]):
-            if _is_question(sent) or sum(retrieval.term_covered(t, {retrieval.stem(w) for w in re.findall(r"[A-Za-z0-9']+", sent.lower())})
+            if _is_question(sent) or sum(retrieval.term_covered(t, retrieval.word_stems(sent))
                                          for t in terms) < need:
                 continue
             nums = {(m.group(1).replace(",", "."), (m.group(2) or "").lower()) for m in _NUM.finditer(sent)}

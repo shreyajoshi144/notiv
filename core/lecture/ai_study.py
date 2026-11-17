@@ -228,9 +228,9 @@ def generate(repo, lecture_id: int, chain, max_wait: float = MAX_WAIT) -> dict:
         results = list(ex.map(lambda a: _map_chunk(chain, a[1], a[0] + 1, len(parts), max_wait), enumerate(parts)))
     stats = _Stats()
     sections, concepts, relations, examples, comparisons, cards, quiz = [], {}, [], [], [], [], []
-    provider = model = None
+    provider = None
     for chunk, (m, s, done) in zip(parts, results):
-        provider, model = done.provider, done.model
+        provider = done.provider
         allowed = {e["id"] for e in chunk}
         texts = {e["id"]: e["text"] for e in chunk}
         for sec in m.get("sections") or []:

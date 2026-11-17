@@ -41,6 +41,8 @@ const ICONS = {
   archive: "M3 5h18v4H3zM5 9v10h14V9M10 13h4",
   home: "M4 11l8-7 8 7M6 10v10h12V10M10 20v-6h4v6", library: "M4 4v16M9 4v16M14 6l5 13M3 20h18", quiz: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01",
   timer: "M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 9v4l2 2M9.5 2.5h5", cat: "M5 20c-1-6 0-10 2-12L6 4l4 2h4l4-2-1 4c2 2 3 6 2 12zM9.5 13h.01M14.5 13h.01M11 16.5h2", gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.3 1a7 7 0 0 0-2-1.2L14.3 3h-4l-.3 2.6a7 7 0 0 0-2 1.2l-2.3-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 2 1.2l.3 2.6h4l.3-2.6a7 7 0 0 0 2-1.2l2.3 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z",
+  layers: "M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5", frame: "M8 3v18M16 3v18M3 8h18M3 16h18", panel: "M4 4h16v16H4zM10 4v16",
+  robot: "M12 3v3M8 7h8a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3zM9.5 12.5h.01M14.5 12.5h.01M10 16h4M3 12v2M21 12v2",
   pause: "M8 5v14M16 5v14", reset: "M4 12a8 8 0 1 0 3-6.2M4 4v5h5", refresh: "M20 11a8 8 0 0 0-14-4l-2 3m0-5v5h5M4 13a8 8 0 0 0 14 4l2-3m0 5v-5h-5",
 };
 export function icon(name, cls = "") {
@@ -240,12 +242,6 @@ export async function signOut() {
   } catch (_) { /* Always leave the workspace; server-side revocation status is audited separately. */ }
   location.replace(url || "/sign-in?reason=signed-out");
 }
-export function logoMark(size = 44) {
-  const ns = "http://www.w3.org/2000/svg", el = (t, at, ...k) => { const e = document.createElementNS(ns, t); for (const [a, v] of Object.entries(at)) e.setAttribute(a, v); e.append(...k); return e; };
-  return el("svg", { viewBox: "0 0 64 64", width: size, height: size, "aria-hidden": "true" },
-    el("defs", {}, el("linearGradient", { id: "lg", x1: 0, y1: 0, x2: 0, y2: 1 }, el("stop", { offset: 0, "stop-color": "#1f5f94" }), el("stop", { offset: ".62", "stop-color": "#6a6f8f" }), el("stop", { offset: 1, "stop-color": "#f36b1d" }))),
-    el("rect", { width: 64, height: 64, rx: 16, fill: "url(#lg)" }), el("circle", { cx: 38, cy: 33, r: 9, fill: "#fff4e4" }), el("path", { d: "M0 50c14-12 30-17 64-9v23H0z", fill: "#16304f" }));
-}
 export const NAV = [
   ["desk", "/app", "Desk", "home"], ["notebooks", "/app/notebooks", "Notebooks", "book"], ["library", "/app?view=library", "Library", "library"],
   ["ask", "/static/study-companion.html", "Ask", "ask"], ["practice", "/static/practice-quiz.html", "Practice", "quiz"],
@@ -255,16 +251,117 @@ export async function mountShell(active, { wide = false, narrow = false } = {}) 
   document.body.classList.add("workspace");
   document.body.prepend(h("a", { class: "skip", href: "#main", text: "Skip to content" }));
   const item = ([key, href, text, ic]) => h("a", { class: "item", href, "aria-current": active === key ? "page" : null }, icon(ic), h("span", { text }));
-  const acct = h("a", { class: "item", href: "/static/account.html", "aria-current": active === "account" ? "page" : null, "aria-label": "Account and settings" }, icon("gear"), h("span", { text: "Account" }));
-  const rail = h("aside", { class: "rail" },
-    h("a", { class: "logo", href: "/app", "aria-label": "Notiv — study desk" }, logoMark(44)),
-    h("nav", { "aria-label": "Primary" }, NAV.map(item), acct), h("div", { class: "grow" }));
+  const acct = h("a", { class: "item acct", href: "/static/account.html", "aria-current": active === "account" ? "page" : null, "aria-label": "Account and settings", title: "Account and settings" }, "·");
+  const layersBtn = h("button", { class: "iconbtn", type: "button", "aria-label": "Layers", title: "Layers (L)", "aria-controls": "layers", "aria-expanded": "false", onclick: () => toggleLayers() }, icon("layers"));
+  const ctxName = h("b", { text: (NAV.find(n => n[0] === active) || [, , active === "account" ? "Account" : "Notiv"])[2] });
+  const newBtn = h("button", { class: "btn primary sm", type: "button", "aria-haspopup": "true", "aria-expanded": "false" }, icon("plus"), h("span", { text: "New" }));
+  const newMenu = h("div", { class: "menu", role: "menu", hidden: true },
+    h("button", { role: "menuitem", type: "button", onclick: () => { closeNew(); quick.lecture(); } }, icon("upload"), "Add a lecture"),
+    h("button", { role: "menuitem", type: "button", onclick: () => { closeNew(); quick.notebook(); } }, icon("book"), "New notebook"),
+    h("button", { role: "menuitem", type: "button", onclick: () => { closeNew(); quick.course(); } }, icon("folder"), "New course"));
+  const closeNew = () => { newMenu.hidden = true; newBtn.setAttribute("aria-expanded", "false"); };
+  newBtn.addEventListener("click", e => { e.stopPropagation(); newMenu.hidden = !newMenu.hidden; newBtn.setAttribute("aria-expanded", String(!newMenu.hidden)); if (!newMenu.hidden) newMenu.querySelector("button").focus(); });
+  document.addEventListener("click", e => { if (!newMenu.hidden && !newMenu.contains(e.target)) closeNew(); });
+  const top = h("header", { class: "app-top" },
+    layersBtn,
+    h("a", { class: "wordmark", href: "/app", "aria-label": "Notiv — study desk" }, "Notiv"),
+    h("div", { class: "ctx", "aria-hidden": "true" }, h("span", { class: "pill", text: "Workspace" }), h("span", { text: "/" }), ctxName),
+    h("nav", { class: "topnav", "aria-label": "Primary" }, NAV.map(item)),
+    h("div", { class: "right" }, h("div", { class: "newmenu" }, newBtn, newMenu), acct));
   const main = h("main", { id: "main", class: "page" + (narrow ? " narrow" : ""), tabindex: "-1" });
-  document.body.insertBefore(rail, document.body.children[1]);
-  document.body.insertBefore(main, rail.nextSibling);
-  try { await loadMe(); } catch (_) { /* api() already redirected on 401 */ }
+  const dock = h("div", { class: "dock", role: "toolbar", "aria-label": "Tools" },
+    h("button", { class: "iconbtn", type: "button", "data-tip": "Layers", "aria-label": "Layers", "aria-controls": "layers", onclick: () => toggleLayers() }, icon("layers")),
+    h("span", { class: "sep", "aria-hidden": "true" }),
+    h("button", { class: "iconbtn", type: "button", "data-tip": "Add a lecture", "aria-label": "Add a lecture", onclick: () => quick.lecture() }, icon("upload")),
+    h("button", { class: "iconbtn", type: "button", "data-tip": "New notebook", "aria-label": "New notebook", onclick: () => quick.notebook() }, icon("book")),
+    h("span", { class: "sep", "aria-hidden": "true" }),
+    h("button", { class: "iconbtn", type: "button", "data-tip": "Focus timer", "aria-label": "Start a focus session", onclick: () => window.dispatchEvent(new Event("notiv:focus")) }, icon("timer")),
+    h("a", { class: "iconbtn", href: "/static/study-companion.html", "data-tip": "Ask Notiv", "aria-label": "Ask Notiv" }, icon("ask")));
+  document.body.insertBefore(top, document.body.children[1]);
+  document.body.insertBefore(main, top.nextSibling);
+  document.body.append(dock);
+  // the context crumb follows the page title ("Caching fundamentals — Notiv" → "Caching fundamentals")
+  const syncCtx = () => { const t = document.title.replace(/^\d\d:\d\d · /, "").split(" — ")[0]; if (t && t !== "Notiv") ctxName.textContent = t; };
+  new MutationObserver(syncCtx).observe(document.querySelector("title") || document.head, { childList: true, subtree: true, characterData: true }); syncCtx();
+  document.addEventListener("keydown", e => {
+    if (e.key.toLowerCase() === "l" && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && !e.target.isContentEditable) { e.preventDefault(); toggleLayers(); }
+    if (e.key === "Escape") { closeNew(); if (LAYERS.el && !LAYERS.el.hidden && innerWidth < 1280) toggleLayers(false); }
+  });
+  const pref = (() => { try { return localStorage.getItem("notiv-layers"); } catch (_) { return null; } })();
+  if (pref === "open" || (pref == null && innerWidth >= 1280)) toggleLayers(true, false);
+  try { const u = await loadMe(); const n = (u && (u.display_name || u.email || "")).trim(); acct.textContent = n ? n.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") : "·"; }
+  catch (_) { /* api() already redirected on 401 */ }
   import("/static/ui/companion.js").then(m => m.mountCompanion({ active })).catch(() => {});
   return main;
+}
+
+/* quick actions shared by the "New" menu, the dock and the layers panel */
+const quick = {
+  async lecture() { const d = await import("/static/ui/dialogs.js"); let courses = []; try { courses = (await api("/courses?limit=200")).items || []; } catch (_) {}
+    const id = await d.newLectureDialog({ courses }); if (id) location.assign("/app/lectures/" + id); },
+  async notebook() { const d = await import("/static/ui/dialogs.js"); const nb = await d.newNotebookDialog(); if (nb) location.assign("/app/notebooks/" + nb.id); },
+  async course() { const d = await import("/static/ui/dialogs.js"); const c = await d.newCourseDialog(); if (c) location.assign("/app/courses/" + c.id); },
+};
+
+/* ── layers: a floating outline of courses → lectures → the open lecture's panels, and notebooks ── */
+const LAYERS = { el: null, loaded: false };
+function toggleLayers(force, remember = true) {
+  if (!LAYERS.el) buildLayers();
+  const open = force ?? LAYERS.el.hidden;
+  LAYERS.el.hidden = !open;
+  document.body.classList.toggle("layers-open", open);
+  $$('[aria-controls="layers"]').forEach(b => { b.setAttribute("aria-expanded", String(open)); if (b.closest(".dock")) b.setAttribute("aria-pressed", String(open)); });
+  if (remember) { try { localStorage.setItem("notiv-layers", open ? "open" : "closed"); } catch (_) {} }
+  if (open && !LAYERS.loaded) { LAYERS.loaded = true; fillLayers(); }
+}
+function buildLayers() {
+  const find = h("input", { type: "search", placeholder: "Find a lecture or notebook", "aria-label": "Filter layers" });
+  find.addEventListener("input", () => { const q = find.value.trim().toLowerCase();
+    $$(".lyr", LAYERS.el).forEach(a => { if (a.classList.contains("sub")) return; a.hidden = !!q && !a.textContent.toLowerCase().includes(q); });
+    $$("details", LAYERS.el).forEach(d => { if (q) d.open = true; }); });
+  LAYERS.body = h("div", { class: "layers-body" }, skeletons(4, ""));
+  LAYERS.el = h("aside", { class: "layers", id: "layers", "aria-label": "Layers", hidden: true },
+    h("div", { class: "layers-head" }, h("h2", null, icon("layers"), "Layers"),
+      h("button", { class: "iconbtn", type: "button", "aria-label": "Close layers", onclick: () => toggleLayers(false) }, icon("close"))),
+    h("div", { class: "layers-find" }, find), LAYERS.body,
+    h("div", { class: "layers-foot" }, h("button", { class: "btn sm", type: "button", onclick: () => quick.lecture() }, icon("upload"), "Lecture"),
+      h("button", { class: "btn sm", type: "button", onclick: () => quick.notebook() }, icon("book"), "Notebook")));
+  document.body.append(LAYERS.el);
+  document.addEventListener("click", e => { if (innerWidth < 1280 && !LAYERS.el.hidden && !LAYERS.el.contains(e.target) && !e.target.closest('[aria-controls="layers"]') && !e.target.closest("dialog")) toggleLayers(false, false); });
+}
+async function fillLayers() {
+  const here = location.pathname, lecM = here.match(/^\/app\/lectures\/(\d+)/), nbM = here.match(/^\/app\/notebooks\/(\d+)/), coM = here.match(/^\/app\/courses\/(\d+)/);
+  let lec = [], cou = [], nbs = [];
+  try { [lec, cou, nbs] = await Promise.all([api("/lectures?limit=200").then(r => r.items || []), api("/courses?limit=200").then(r => r.items || []), api("/notebooks").then(r => r.items || []).catch(() => [])]); }
+  catch (e) { clear(LAYERS.body, h("p", { class: "none", text: "Couldn't load your outline." })); return; }
+  const lecRow = l => { const cur = lecM && Number(lecM[1]) === l.id;
+    return h("a", { class: "lyr", href: "/app/lectures/" + l.id, "aria-current": cur ? "page" : null, title: l.title || "Untitled lecture" }, icon("frame"), h("span", { class: "t", text: l.title || "Untitled lecture" }), h("span", { class: "dot " + (l.status || ""), "aria-label": stateLabel(l.status) })); };
+  const byCourse = new Map(); for (const l of lec) { const k = l.course_id || 0; if (!byCourse.has(k)) byCourse.set(k, []); byCourse.get(k).push(l); }
+  const groups = cou.filter(c => byCourse.has(c.id)).map(c => h("details", { class: "group", open: true },
+    h("summary", null, icon("folder"), h("a", { href: "/app/courses/" + c.id, class: "t", text: c.name, style: { color: coM && Number(coM[1]) === c.id ? "var(--clay)" : "inherit" }, onclick: e => e.stopPropagation() })),
+    byCourse.get(c.id).map(lecRow)));
+  const loose = byCourse.get(0) || [];
+  clear(LAYERS.body,
+    h("a", { class: "lyr", href: "/app", "aria-current": here === "/app" && !location.search ? "page" : null, style: { paddingLeft: "8px" } }, icon("home"), h("span", { class: "t", text: "Desk" })),
+    h("details", { open: true }, h("summary", null, `Lectures · ${lec.length}`), lec.length ? [groups, loose.map(lecRow)] : h("p", { class: "none", text: "No lectures yet." })),
+    h("details", { open: true }, h("summary", null, `Notebooks · ${nbs.length}`), nbs.length ? nbs.map(n => h("a", { class: "lyr", href: "/app/notebooks/" + n.id, "aria-current": nbM && Number(nbM[1]) === n.id ? "page" : null }, icon("book"), h("span", { class: "t", text: n.title || "Untitled notebook" }))) : h("p", { class: "none", text: "No notebooks yet." })));
+  if (lecM) mirrorLectureTabs(LAYERS.body.querySelector('.lyr[aria-current="page"]'));
+}
+const stateLabel = s => ({ done: "Ready", queued: "Waiting", running: "Processing", processing: "Processing", failed: "Needs attention", created: "No source yet", cancelled: "Cancelled" })[s] || "";
+/* the open lecture's panels (Transcript, Evidence, …) appear as its child layers and stay in step with its tabs */
+function mirrorLectureTabs(row) {
+  if (!row) return;
+  let tries = 0;
+  const attempt = () => {
+    const tabs = $$(".margin .tab");
+    if (!tabs.length) { if (++tries < 40) setTimeout(attempt, 250); return; }
+    const subs = tabs.map(t => { const label = (t.childNodes[0]?.textContent || t.textContent).trim();
+      const b = h("button", { class: "lyr sub", type: "button", "aria-selected": t.getAttribute("aria-selected") || "false", onclick: () => { t.click(); t.closest(".margin")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } }, icon("panel"), h("span", { class: "t", text: label }));
+      new MutationObserver(() => b.setAttribute("aria-selected", t.getAttribute("aria-selected") || "false")).observe(t, { attributes: true, attributeFilter: ["aria-selected"] });
+      return b; });
+    row.after(...subs);
+  };
+  attempt();
 }
 export function pageError(main, e, retry, what = "this page") {
   clear(main, h("div", { class: "empty" }, h("h2", { text: e.status === 404 ? "We can't find that" : `Couldn't load ${what}` }),

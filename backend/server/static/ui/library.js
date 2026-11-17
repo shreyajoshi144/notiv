@@ -1,5 +1,5 @@
 import { $, h, clear, api, mountShell, pageError, skeletons, icon, plural, when, mmss, duration, spine, stateChip, explain, toast, debounce, announce } from "/static/ui/core.js";
-import { newLectureDialog, newNotebookDialog, newCourseDialog } from "/static/ui/dialogs.js";
+import { newLectureDialog, newNotebookDialog, newCourseDialog, deleteLecture, deleteCourse } from "/static/ui/dialogs.js";
 import { focusStats, setFocusGoal } from "/static/ui/companion.js";
 
 const S = { lectures: [], courses: [], notebooks: [], filter: "all", q: "", course: "", timer: null, me: null };
@@ -87,7 +87,7 @@ function todayPanel() {
     h("button", { type: "button", "aria-pressed": String(st.goal === m), onclick: () => { setFocusGoal(m); render(); announce(`Daily goal set to ${m} minutes`); } }, `${m}m`)));
   const days = ["S", "M", "T", "W", "T", "F", "S"], max = Math.max(st.goal, ...st.week.map(w => w.min));
   const week = h("ol", { class: "week", "aria-label": "Focus minutes, last 7 days" }, ...st.week.map((w, i) =>
-    h("li", { title: `${w.min} min`, class: i === 6 ? "is-today" : "" }, h("span", { class: "bar-v" }, h("i", { style: { height: `${Math.max(4, Math.round(100 * w.min / max))}%` } })),
+    h("li", { title: `${w.min} min`, class: i === 6 ? "is-today" : "" }, h("span", { class: "bar-v" }, h("i", { style: { height: w.min ? `${Math.max(6, Math.round(100 * w.min / max))}%` : "0" } })),
       h("span", { class: "d", text: days[w.day.getDay()] }), h("span", { class: "sr", text: `${w.min} minutes` }))));
   return h("section", { class: "today", "aria-labelledby": "today-h" },
     h("div", { class: "today-main" },
@@ -127,7 +127,8 @@ function lectureRow(l) {
   return h("li", { class: "lec-li", dataset: { lecture: l.id } }, h("a", { class: "row-link lec-row", href: "/app/lectures/" + l.id },
     h("div", null, h("div", { class: "row-title", text: l.title || "Untitled lecture" }), h("div", { class: "meta", text: l.course_name || "No course" })),
     prog, h("div", { class: "dur", text: l.duration ? duration(l.duration) : "" }), h("div", { class: "added", text: when(l.created_at) })),
-    l.status === "failed" && l.job_id ? h("button", { class: "btn sm", type: "button", "aria-label": "Retry processing " + (l.title || "lecture"), onclick: e => retryJob(l, e.currentTarget) }, icon("refresh"), "Retry") : null);
+    l.status === "failed" && l.job_id ? h("button", { class: "btn sm", type: "button", "aria-label": "Retry processing " + (l.title || "lecture"), onclick: e => retryJob(l, e.currentTarget) }, icon("refresh"), "Retry") : null,
+    h("button", { class: "btn sm quiet row-del", type: "button", title: "Delete lecture", "aria-label": "Delete " + (l.title || "lecture"), onclick: async () => { if (await deleteLecture(l)) await refresh(); } }, icon("trash")));
 }
 function lectureList() {
   const q = S.q.trim().toLowerCase();
@@ -153,8 +154,9 @@ function lecturesSection() {
 function coursesSection() {
   return h("section", { class: "section", "aria-labelledby": "co-h" },
     h("div", { class: "section-head" }, h("h2", { id: "co-h", text: "Courses" }), h("div", { class: "tools" }, h("button", { class: "btn sm", onclick: async () => { const c = await newCourseDialog(); if (c) { await refresh(); } } }, icon("plus"), "New course"))),
-    S.courses.length ? h("ul", { class: "ledger" }, ...S.courses.map(c => h("li", null, h("a", { class: "row-link course-row", href: "/app/courses/" + c.id },
-      h("div", { class: "row-title", text: c.name }), h("span", { class: "faint", text: plural(c.lecture_count, "lecture") }), h("span", { class: "faint", text: c.ready_count + " ready" })))))
+    S.courses.length ? h("ul", { class: "ledger" }, ...S.courses.map(c => h("li", { class: "lec-li" }, h("a", { class: "row-link course-row", href: "/app/courses/" + c.id },
+      h("div", { class: "row-title", text: c.name }), h("span", { class: "faint", text: plural(c.lecture_count, "lecture") }), h("span", { class: "faint", text: (c.ready_count || 0) + " ready" })),
+      h("button", { class: "btn sm quiet row-del", type: "button", title: "Delete course", "aria-label": "Delete course " + c.name, onclick: async () => { if (await deleteCourse(c)) await refresh(); } }, icon("trash")))))
     : h("div", { class: "empty" }, h("p", { text: "Courses group lectures so you can search and practise across all of them. Create one when you have two or more lectures on a subject." })));
 }
 

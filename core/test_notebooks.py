@@ -1,7 +1,12 @@
 """Persistence and authorization regression tests for the notebook milestone."""
-import os, tempfile, unittest, json
+import os, tempfile, unittest
 
 SECRET='n'*40
+def _pdf_text(data):
+ import io
+ from pypdf import PdfReader
+ return " ".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(data)).pages)
+
 class TestNotebookApi(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
@@ -26,18 +31,20 @@ class TestNotebookApi(unittest.TestCase):
   self.assertEqual(self.client.post(f'/notebooks/{nid}/sources',headers=self.other,json={'source_type':'lecture','source_id':lid}).status_code,404)
   item=self.client.post(f'/notebooks/{nid}/items',headers=self.h,json={'item_type':'note','title':'Revision','content':'Binary tree notes','provenance':[{'lecture_id':lid,'timestamp':12.4}]});self.assertEqual(item.status_code,201,item.text);iid=item.json()['id']
   updated=self.client.put(f'/notebooks/{nid}/items/{iid}',headers=self.h,json={'item_type':'note','title':'Revision','content':'Edited notes','provenance':[],'expected_version':1});self.assertEqual(updated.status_code,200,updated.text);self.assertEqual(updated.json()['version'],2)
-  item_export=self.client.get(f'/notebooks/{nid}/items/{iid}/export?format=md',headers=self.h);self.assertEqual(item_export.status_code,200);self.assertIn(b'Edited notes',item_export.content)
+  item_export=self.client.get(f'/notebooks/{nid}/items/{iid}/export',headers=self.h);self.assertEqual(item_export.status_code,200,item_export.text[:200]);self.assertTrue(item_export.content.startswith(b'%PDF-'));self.assertIn('Edited notes',_pdf_text(item_export.content))
+  self.assertEqual(self.client.get(f'/notebooks/{nid}/items/{iid}/export?format=md',headers=self.h).status_code,422)
   conflict=self.client.put(f'/notebooks/{nid}/items/{iid}',headers=self.h,json={'item_type':'note','title':'Revision','content':'Stale','provenance':[],'expected_version':1});self.assertEqual(conflict.status_code,409)
   canvas={'nodes':[{'id':'a','text':'Idea','x':30,'y':40},{'id':'b','text':'Evidence','x':300,'y':80}],'edges':[{'from':'a','to':'b'}]}
   cr=self.client.put(f'/notebooks/{nid}/canvas',headers=self.h,json={'state':canvas});self.assertEqual(cr.status_code,200,cr.text);self.assertEqual(cr.json()['state'],canvas)
   # New API read confirms durable rows, not only the response object.
   loaded=self.client.get(f'/notebooks/{nid}',headers=self.h).json();self.assertEqual(loaded['canvas'],canvas);self.assertEqual(loaded['items'][0]['content'],'Edited notes')
-  self.assertEqual(self.client.get(f'/notebooks/{nid}/export?format=md',headers=self.h).status_code,200)
-  self.assertEqual(self.client.get(f'/notebooks/{nid}/export?format=json',headers=self.h).status_code,200)
-  for fmt in ('txt','csv','svg','docx','pdf','pptx'):
-   exported=self.client.get(f'/notebooks/{nid}/export?format={fmt}',headers=self.h)
-   self.assertEqual(exported.status_code,200,f'{fmt}: {exported.text[:200]}')
-   self.assertGreater(len(exported.content),0,fmt)
+  exported=self.client.get(f'/notebooks/{nid}/export?format=pdf',headers=self.h)
+  self.assertEqual(exported.status_code,200,exported.text[:200]);self.assertEqual(exported.headers['content-type'],'application/pdf')
+  self.assertIn('Algorithms.pdf',exported.headers['content-disposition'])
+  text=_pdf_text(exported.content)
+  for want in ('Algorithms','Exam prep','Revision','Edited notes','Canvas','Idea','Evidence'):self.assertIn(want,text)
+  for fmt in ('md','json','txt','csv','svg','docx','pptx'):
+   self.assertEqual(self.client.get(f'/notebooks/{nid}/export?format={fmt}',headers=self.h).status_code,422,fmt)
   share=self.client.post(f'/notebooks/{nid}/shares',headers=self.h,json={'permission':'read','expires_in_seconds':3600});self.assertEqual(share.status_code,201,share.text);token=share.json()['token']
   public=self.client.get('/shared/notebooks/'+token);self.assertEqual(public.status_code,200,public.text);self.assertEqual(public.json()['permission'],'read')
   self.assertEqual(self.client.delete(f'/notebooks/{nid}/shares/{share.json()["id"]}',headers=self.other).status_code,404)
@@ -52,16 +59,13 @@ class TestNotebookApi(unittest.TestCase):
   self.assertEqual(self.client.put(f'/notebooks/{nid}/items/{iid}',headers=self.other,json={'item_type':'note','title':'Takeover','content':'bad','provenance':[],'expected_version':1}).status_code,404)
   self.assertEqual(self.client.delete(f'/notebooks/{nid}/items/{iid}',headers=self.other).status_code,404)
   self.assertEqual(self.client.put(f'/notebooks/{nid}/canvas',headers=self.other,json={'state':{'nodes':[],'edges':[]}}).status_code,404)
-  self.assertEqual(self.client.get(f'/notebooks/{nid}/export?format=json',headers=self.other).status_code,404)
-  self.assertEqual(self.client.get(f'/notebooks/{nid}/items/{iid}/export?format=md',headers=self.other).status_code,404)
+  self.assertEqual(self.client.get(f'/notebooks/{nid}/export',headers=self.other).status_code,404)
+  self.assertEqual(self.client.get(f'/notebooks/{nid}/items/{iid}/export',headers=self.other).status_code,404)
   self.assertEqual(self.client.post(f'/notebooks/{nid}/shares',headers=self.other,json={'permission':'read'}).status_code,404)
-  for fmt,magic in [('docx',b'PK\x03\x04'),('pptx',b'PK\x03\x04'),('pdf',b'%PDF-')]:
-   r=self.client.get(f'/notebooks/{nid}/export?format={fmt}',headers=self.h)
-   self.assertEqual(r.status_code,200,f'{fmt}: {r.text[:200]}');self.assertTrue(r.content.startswith(magic),fmt)
-  svg=self.client.get(f'/notebooks/{nid}/export?format=svg',headers=self.h)
-  self.assertEqual(svg.status_code,200);self.assertIn(b'<svg',svg.content);self.assertIn(b'Isolation notebook',svg.content)
-  md=self.client.get(f'/notebooks/{nid}/export?format=md',headers=self.h)
-  self.assertIn(b'Visible text',md.content);self.assertIn(b'lecture_id',md.content);self.assertIn(b'timestamp',md.content)
+  r=self.client.get(f'/notebooks/{nid}/export',headers=self.h)
+  self.assertEqual(r.status_code,200,r.text[:200]);self.assertTrue(r.content.startswith(b'%PDF-'))
+  text=_pdf_text(r.content);self.assertIn('Isolation notebook',text);self.assertIn('Visible text',text)
+  self.assertNotIn('lecture_id',text)  # no raw JSON in the printed document
   self.assertEqual(self.client.delete(f'/notebooks/{nid}',headers=self.h).status_code,204)
  def test_lecture_picker_api_returns_only_owned_lectures(self):
   own=self.env.lecture(user=11,title='Picker owned lecture')
@@ -101,7 +105,7 @@ class TestNotebookApi(unittest.TestCase):
   self.assertEqual(self.client.post('/notebooks',headers=self.h,json={'title':'Foreign workspace','workspace_id':999999}).status_code,404)
  def test_notebook_ui_and_asset_routes(self):
   r=self.client.get("/app/notebooks");self.assertEqual(r.status_code,200);self.assertIn("/static/ui/notebooks.js",r.text)
-  self.assertEqual(self.client.get("/static/assets/notiv-hero.jpg").status_code,200)
+  self.assertEqual(self.client.get("/static/assets/app-preview.png").status_code,200)
   self.assertEqual(self.client.get("/share/anything").status_code,200)
  def test_empty_library_and_validation(self):
   r=self.client.get('/notebooks?q=unlikely-notiv-query-xyz',headers=self.h);self.assertEqual(r.status_code,200);self.assertEqual(r.json()['items'],[])

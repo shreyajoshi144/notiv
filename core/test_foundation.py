@@ -203,7 +203,6 @@ class TestEvidenceAndAuthz(Base):
 
     def test_evidence_points_to_segment_slide_asset_and_time(self):
         assets = {a["type"]: a for a in self.repo.list_assets(self.lid)}
-        rows = {e["source_type"]: e for e in self.repo.list_evidence(self.lid)}
         t = next(e for e in self.repo.list_evidence(self.lid) if e["source_type"] == "transcript" and e["start"] == 7.0)
         seg = next(s for s in self.repo.viewer_data(self.lid)["segments"] if s["start"] == 7.0)
         self.assertEqual((t["source_id"], t["slide_index"], t["end"], t["source_asset_id"]),

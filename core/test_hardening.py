@@ -8,13 +8,12 @@ weights cannot be downloaded in the test environment, so transcripts are explici
 """
 import os
 import shutil
-import struct
 import subprocess
 import tempfile
 import unittest
 import zipfile
 
-from core.lecture import jobs, media, passages, pipeline, retrieval, slides, transcribe, validation
+from core.lecture import jobs, media, passages, retrieval, slides, transcribe, validation
 from core.lecture.align import Segment
 from core.lecture.ask import NOT_ENOUGH, AskService
 from core.lecture.errors import PermanentError, ValidationError
@@ -76,7 +75,7 @@ def make_pdf(path, sizes, rotate=None, edge_text=True):
 
 def make_pptx(path, sizes, hidden=(), with_image=None):
     from pptx import Presentation
-    from pptx.util import Emu, Inches
+    from pptx.util import Inches
     prs = Presentation()
     for i, (w_in, h_in) in enumerate(sizes[:1]):
         prs.slide_width, prs.slide_height = Inches(w_in), Inches(h_in)
@@ -447,7 +446,7 @@ class TestPipelineWorkflow(Tmp):
 
         lid = self.env.lecture(ALICE, self.mp3, self.pdf, title="retry")
         js = self.env.jobs(flaky)
-        jid = js.enqueue(lid, max_attempts=3)
+        js.enqueue(lid, max_attempts=3)
         self.assertEqual(js.run_next().status, jobs.RETRYING)
         self.assertEqual(js.run_next().status, jobs.COMPLETED)
         self.assertEqual(len(self.ws.slides(ALICE, lid)["slides"]), 3)

@@ -1,5 +1,5 @@
 """PostgreSQL contract test — SKIPPED unless NOTIV_TEST_DATABASE_URL points at a real server AND psycopg is installed.
-It was NOT run in the authoring sandbox (no driver). Run: NOTIV_TEST_DATABASE_URL=postgresql://postgres:notiv@localhost:55432/notiv
+Run: NOTIV_TEST_DATABASE_URL=postgresql://postgres:notiv@localhost:55432/notiv
 (docker compose -f docker-compose.sprint5.yml up -d postgres) then `pytest core/test_pg_contract.py`.
 The URL is exported as NOTIV_DATABASE_URL in a SUBPROCESS so the store binds to PostgreSQL (a unique schema per run)."""
 import os
@@ -41,6 +41,11 @@ SCRIPT = textwrap.dedent('''
     ops_store.rl_hit("b", 1); assert ops_store.rl_hit("b", 1) == 2
     study_store.session_counts(1, "lecture", l)
     store.delete_lecture_data(l); assert store.get_lecture(l) is None and ops_store.outbox_pending()
+    # course deletion refuses while lectures remain, then removes the course and its course-scoped sessions
+    co = store.create_course(1, "pg course", ws); cl = store.create_lecture(1, "in course", course_id=co, workspace_id=ws)
+    try: store.delete_course_row(co); raise AssertionError("deleted a course that still had lectures")
+    except RuntimeError: pass
+    store.delete_lecture_data(cl); store.delete_course_row(co); assert store.get_course(co) is None
     print("PG-CONTRACT-OK")
 ''')
 

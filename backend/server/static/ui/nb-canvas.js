@@ -21,7 +21,7 @@ export function mountCanvas(p, { nb, reload, openItemPicker }) {
       h("button", { class: "btn sm primary", type: "button", onclick: () => addNode() }, icon("plus"), "Add an idea"), connectBtn, undoBtn,
       h("button", { class: "btn sm", type: "button", onclick: importMap }, icon("canvas"), "Import a concept map"),
       h("span", { class: "grow" }),
-      h("button", { class: "btn sm", type: "button", onclick: async e => { if (dirty) await save(); try { await download(`/notebooks/${nb.id}/export?format=svg`, "notiv-canvas.svg"); toast("Downloaded."); } catch (x) { toast(explain(x, "export the canvas"), "err"); } } }, icon("download"), "Export SVG")),
+      h("button", { class: "btn sm", type: "button", onclick: async e => { if (dirty) await save(); try { await download(`/notebooks/${nb.id}/export?format=pdf`, "notiv-notebook.pdf"); toast("Downloaded. The canvas is on the last page."); } catch (x) { toast(explain(x, "download the PDF"), "err"); } } }, icon("download"), "Download PDF")),
     h("div", { id: "cv-conflict" }), wrap, hint);
 
   const pushUndo = () => { undo.push(JSON.stringify(state)); if (undo.length > 30) undo.shift(); undoBtn.disabled = false; };

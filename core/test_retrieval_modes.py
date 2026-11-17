@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from unittest import mock
 
-import numpy as np
 
 from core.lecture import ask, health, retrieval, settings
 from core.lecture.retrieval import EmbeddingUnavailable, SubwordHashEmbedder

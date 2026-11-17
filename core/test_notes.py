@@ -1,7 +1,7 @@
 """Personal notes (gap closure): CRUD + persistence + lecture/evidence links + privacy + deletion cleanup + HTTP contract.
 
 Real code paths only (real SQLite store, real services, real stdlib HTTP server). The FastAPI routes are covered by the
-class at the bottom, which SKIPS when FastAPI/httpx are missing (=> routes_notes.py is UNVERIFIED in that case)."""
+class at the bottom (SKIPPED when FastAPI/httpx are missing)."""
 import json
 import os
 import shutil
@@ -254,7 +254,7 @@ class TestNotesHttp(unittest.TestCase):
         self.assertEqual({self.call("PATCH", f"/notes/{i}", {"bogus": 1}, user=BOB)[0] for i in (mine, 999999)}, {400})
         nid = self.call("POST", f"/lectures/{self.lid}/notes", {"body": "x"})[1]["id"]
         self.assertEqual(self.call("PATCH", f"/notes/{nid}", {"bogus": 1})[0], 400)
-        for path in (f"/notes/{HUGE}", f"/notes/0", f"/lectures/{HUGE}/notes", f"/lectures/{self.lid}/notes?evidence_id={HUGE}"):
+        for path in (f"/notes/{HUGE}", "/notes/0", f"/lectures/{HUGE}/notes", f"/lectures/{self.lid}/notes?evidence_id={HUGE}"):
             code = self.call("GET", path)[0]
             self.assertIn(code, (400, 404), path)
 

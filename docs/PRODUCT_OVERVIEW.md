@@ -67,7 +67,7 @@ mindmap
     Organise
       Courses and lectures
       Personal notes on evidence
-      Notebooks, canvas, exports
+      Notebooks, canvas, PDF download
       Read-only share links
     Study place
       Today panel and daily goal
@@ -100,22 +100,26 @@ flowchart LR
 
 | Screen | Route | Purpose |
 |---|---|---|
-| Landing | `/` | Night hero over the Notiv photograph, a live-looking answer card with receipts, features, closing call to action |
+| Landing | `/` | Hero sky photograph, statement, Ask demo over the sky, workspace screenshot, features, use cases, steps, FAQs |
 | Account | `/sign-in`, `/register`, `/forgot-password`, `/reset-password` | Email + password, segmented sign-in/register switch, strength meter, Caps Lock hint |
-| Desk | `/app` | Today panel (greeting, goal ring, streak, week bars, focus start, continue last lecture), library, upload |
+| Desk | `/app` | Today panel (greeting, goal ring, streak, week bars, focus start, continue last lecture), library, upload, delete lectures and courses |
 | Lecture | `/app/lectures/{id}` | Player or page viewer, transcript, summary, concepts, study, Ask, notes, mind map |
-| Notebooks | `/app/notebooks` | Notes, generated items, canvas, exports (JSON, MD, TXT, CSV, SVG, PDF, DOCX, PPTX), share links |
+| Notebooks | `/app/notebooks` | Notes, generated items, canvas, PDF download (whole notebook or one item), share links |
 | Practice | question bank and AI quiz | Manual and generated questions |
 
-Design rules: warm paper and dusk-blue palette with an ember accent, Fraunces + Instrument Sans (self-hosted), iOS-style
-controls (44 px targets, segmented controls, pill tabs, bottom sheets), no glassmorphism or backdrop blur, motion that
-respects `prefers-reduced-motion`.
+Design system "Daybreak": details in [Design system](DESIGN_SYSTEM.md).
+
+* **Landing:** a light, cinematic sky story around the hero photograph, set in an editorial serif.
+* **Workspace:** a dotted canvas with a slim top bar, a floating Layers panel and a floating dock. There is no permanent
+  sidebar.
+* **Colour roles:** periwinkle for selection, ink for the primary action, gold for every reference back to the lecture.
+* **Companion:** a small friendly robot.
 
 ## What Notiv deliberately does not do
 
 * No live lecture capture (uploads only).
 * No URL ingestion (YouTube, web pages).
-* No social sign-in (Google / OIDC was removed; email + password only).
+* No social sign-in (email + password only).
 * No claim that AI output is correct beyond what its citations support. Supplementary explanations are labelled as such.
 
 ## Where to read next
@@ -123,4 +127,5 @@ respects `prefers-reduced-motion`.
 * [Architecture](ARCHITECTURE.md): how it is built.
 * [Evaluation](EVALUATION.md): how quality is measured.
 * [Results and testing](RESULTS_AND_TESTING.md): what has been verified and what has not.
-* [Sprints](SPRINTS.md) and the [changelog](../CHANGELOG.md): how it got here.
+* [Deployment](DEPLOYMENT.md) and [Design system](DESIGN_SYSTEM.md).
+* [Sprints](SPRINTS.md) and the [changelog](CHANGELOG.md): how it got here.

@@ -1,9 +1,62 @@
 # Changelog
 
 All notable changes to Notiv. Newest first. Format based on [Keep a Changelog](https://keepachangelog.com/).
-Sprint context: [docs/SPRINTS.md](docs/SPRINTS.md). Test evidence: [docs/RESULTS_AND_TESTING.md](docs/RESULTS_AND_TESTING.md).
+Sprint context: [SPRINTS.md](SPRINTS.md). Test evidence: [RESULTS_AND_TESTING.md](RESULTS_AND_TESTING.md).
 
-## [Unreleased] — 2026-10-27 · Launch readiness
+## [Unreleased] — 2026-11-17 · Redesign: Daybreak, PDF export, pre-release audit
+
+- Security: `.dockerignore` now excludes `*.env`, so deployment env files (API keys, secrets) are never copied into the image.
+- Removed: the unused legacy meeting/RAG prototype (`core/rag_engine.py`, `vector_store.py`, `job_queue.py`, `extractor.py`, `routes_chat.py`, `services/`, `schemas/` and their never-collected tests), six outdated browser scripts, `requirements-export.txt`, `logo.svg`.
+- Changed: `docker-compose.sprint5.yml` uses SeaweedFS for S3 (MinIO images are no longer published); PostgreSQL 16 + S3 verified.
+- Fixed: `tools/verify_sprint5.sh` depended on the git-ignored `_build_tools/`; it now needs only requirements-test.txt.
+- Changed: notebook and item downloads are PDF only, laid out per item type instead of raw JSON (`GET /notebooks/{id}/export`, `GET /notebooks/{id}/items/{item_id}/export`; other `format` values now return 422).
+- Fixed: the Docker image could not export PDF (reportlab was only in `requirements-export.txt`); it is now in `requirements-prod.txt`.
+- Added: `DELETE /courses/{id}` deletes the course and every lecture in it; delete buttons on library rows, course page and lecture page.
+- Fixed: the course page listed only processed lectures although its count included all of them.
+- Fixed: the landing top bar scrolled away; it is now pinned, turns solid past the hero and highlights the current section.
+
+### Changed
+- **Landing:** a cinematic, light story built on `notiv.jpg`:
+  - layered sky light and a floating nav;
+  - an Instrument Serif headline with gold-italic accents;
+  - statement, vista with the Ask demo, workspace-as-canvas, editorial features, use-case cards, steps, FAQ;
+  - a daybreak closing section.
+- **Workspace:** no permanent sidebar. A top bar holds a segmented section nav, a context breadcrumb, a **+ New** menu
+  and the account avatar. Pages sit on a dotted ivory canvas, with:
+  - a floating **Layers** panel: courses → lectures (with status), the open lecture's panels as child layers, and notebooks.
+    It has a filter and toggles with **L**;
+  - a floating **dock**: Layers, add lecture, new notebook, focus timer, Ask;
+  - on phones, a bottom tab bar and sheets.
+- **Brand:** a text-only "Notiv" wordmark and a new favicon. The cat companion is replaced by a small friendly robot.
+- **Auth:** the form on ivory beside the hero sky.
+- **Tokens:** ivory canvas, periwinkle selection, ink primary actions, gold references. Instrument Serif for display,
+  EB Garamond for reading.
+- **New docs:** [Deployment](DEPLOYMENT.md) and [Design system](DESIGN_SYSTEM.md).
+
+### Removed
+- Dark mode, the interim iOS-style "Ink & Red Pencil" pass, the cat, the logo mark, the blurred background, and the
+  Fraunces / Instrument Sans fonts.
+
+## 2026-10-31 · Docker verified
+
+### Added
+- `tools/smoke_deploy.py`: drives a running deployment like a browser (cookie session + CSRF): health, readiness,
+  accounts, all four formats, Ask, study items, cross-account 404; `--as-proxy` simulates an HTTPS reverse proxy.
+- `docker-entrypoint.sh`.
+
+### Changed
+- Dockerfile: data lives in a `/data` volume (SQLite, uploads, Whisper weights via `HF_HOME`); listens on `$PORT`.
+
+### Fixed
+- The container could not write a root-owned volume (the app runs as uid 10001). The entrypoint now fixes ownership
+  and drops privileges.
+- Behind a hosting platform's HTTPS proxy every write failed the origin check, because uvicorn ignored
+  `X-Forwarded-Proto` from non-local proxies. The image sets `FORWARDED_ALLOW_IPS=*`.
+- Ask abstained when evidence and question wrote a compound differently ("write-through" / "write through" /
+  "writethrough"). `retrieval.word_stems()` adds hyphen parts and the closed form.
+- `test_media_study` relied on `NOTIV_AUTH_SECRET` being set in the shell.
+
+## 2026-10-27 · Launch readiness
 
 ### Added
 - `tools/eval_format_matrix.py`: 33 real PDF / PPTX / MP3 / MP4 variants, including broken files, run through the real pipeline.

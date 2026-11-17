@@ -1,4 +1,4 @@
-// Notiv desk companion: a study cat (launcher) + a focus timer. Frontend only; uses no new API.
+// Notiv desk companion: a small study robot (launcher) + a focus timer. Frontend only; uses no new API.
 // The timer stores an absolute end time, so it stays accurate after tab inactivity, sleep or reload.
 
 const KEY = "notiv.focus.v1", PREF = "notiv.companion.v1", LOG = "notiv.focus.log.v1", GOAL = "notiv.focus.goal.v1";
@@ -19,18 +19,17 @@ function el(tag, attrs = {}, ...kids) {
 const NS = "http://www.w3.org/2000/svg";
 function svg(tag, attrs = {}, ...kids) { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; }
 const C = "#2c3b5e", CREAM = "#f3e6d3", EMBER = "#e8743a", GOLD = "#f6b26b", INK = "#17213a";
-function catSvg() {
-  return svg("svg", { viewBox: "0 0 130 112", "aria-hidden": "true", class: "cat-svg" },
-    svg("path", { class: "cat-tail", d: "M104 92c18 2 25-12 19-26-3-7-11-5-10 2 1 8-4 14-14 15", fill: C }),
-    svg("ellipse", { cx: 64, cy: 80, rx: 46, ry: 30, fill: C }), svg("ellipse", { cx: 64, cy: 88, rx: 28, ry: 18, fill: CREAM }),
-    svg("path", { d: "M24 42 26 12l24 17M104 42 102 12 78 29", fill: C }), svg("path", { d: "M31 35l1-14 11 8M97 35l-1-14-11 8", fill: EMBER, opacity: ".85" }),
-    svg("ellipse", { cx: 64, cy: 52, rx: 42, ry: 32, fill: C }),
-    svg("g", { class: "cat-eyes" }, svg("ellipse", { cx: 48, cy: 50, rx: 6, ry: 7, fill: GOLD }), svg("ellipse", { cx: 80, cy: 50, rx: 6, ry: 7, fill: GOLD }),
-      svg("ellipse", { cx: 48, cy: 51, rx: 2.4, ry: 4.6, fill: INK }), svg("ellipse", { cx: 80, cy: 51, rx: 2.4, ry: 4.6, fill: INK })),
-    svg("path", { d: "M61 61h6l-3 3.4z", fill: EMBER }), svg("path", { d: "M64 64.5c-2 4-7 4-9 2M64 64.5c2 4 7 4 9 2", stroke: CREAM, "stroke-width": "1.7", fill: "none", "stroke-linecap": "round" }),
-    svg("path", { d: "M30 58l-12-3M30 63l-12 3M98 58l12-3M98 63l12 3", stroke: CREAM, "stroke-width": "1.2", opacity: ".7", "stroke-linecap": "round" }),
-    svg("ellipse", { cx: 38, cy: 63, rx: 6, ry: 3.4, fill: EMBER, opacity: ".35" }), svg("ellipse", { cx: 90, cy: 63, rx: 6, ry: 3.4, fill: EMBER, opacity: ".35" }),
-    svg("ellipse", { cx: 44, cy: 106, rx: 13, ry: 6.5, fill: C }), svg("ellipse", { cx: 84, cy: 106, rx: 13, ry: 6.5, fill: C }));
+function catSvg() {  // a small, friendly robot (class names kept for the launcher's styles and tests)
+  return svg("svg", { viewBox: "0 0 120 120", "aria-hidden": "true", class: "cat-svg" },
+    svg("line", { x1: 60, y1: 14, x2: 60, y2: 28, stroke: "#4b4d66", "stroke-width": 3, "stroke-linecap": "round" }),
+    svg("circle", { class: "bot-light", cx: 60, cy: 12, r: 6, fill: "#d6a84f" }),
+    svg("rect", { x: 14, y: 50, width: 10, height: 22, rx: 5, fill: "#a9a2e4" }), svg("rect", { x: 96, y: 50, width: 10, height: 22, rx: 5, fill: "#a9a2e4" }),
+    svg("rect", { x: 22, y: 28, width: 76, height: 66, rx: 24, fill: "#fff", stroke: "#d7d5e1", "stroke-width": 2 }),
+    svg("rect", { x: 32, y: 40, width: 56, height: 38, rx: 16, fill: "#1b2246" }),
+    svg("g", { class: "cat-eyes" }, svg("rect", { x: 44, y: 51, width: 9, height: 12, rx: 4.5, fill: "#cfd6ff" }), svg("rect", { x: 67, y: 51, width: 9, height: 12, rx: 4.5, fill: "#cfd6ff" })),
+    svg("path", { d: "M52 69c4 3.5 12 3.5 16 0", stroke: "#cfd6ff", "stroke-width": 2.6, fill: "none", "stroke-linecap": "round" }),
+    svg("ellipse", { cx: 38, cy: 84, rx: 5, ry: 3, fill: "#f3c7c1", opacity: ".8" }), svg("ellipse", { cx: 82, cy: 84, rx: 5, ry: 3, fill: "#f3c7c1", opacity: ".8" }),
+    svg("rect", { x: 44, y: 96, width: 32, height: 14, rx: 7, fill: "#eceffd", stroke: "#d7d5e1", "stroke-width": 2 }));
 }
 
 // ── focus log: minutes of completed focus per local day (for "today", the daily goal and the streak) ─────
@@ -141,11 +140,11 @@ function build() {
     el("button", { role: "menuitem", type: "button", class: "cmp-item", onclick: () => toggle(timerPanel, true) }, el("strong", { text: "Focus timer" }), el("span", { text: "Pomodoro focus and break sessions" })),
     el("a", { role: "menuitem", class: "cmp-item", href: quizHref() }, el("strong", { text: "Practice quiz" }), el("span", { text: "A quiz from a lecture, tailored to your goal" })),
     el("button", { role: "menuitem", type: "button", class: "cmp-item sub", onclick: () => { P.calm = !P.calm; save(PREF, P); root.classList.toggle("calm", P.calm); calmBtn(); } }),
-    el("button", { role: "menuitem", type: "button", class: "cmp-item sub", onclick: () => { P.hidden = true; save(PREF, P); root.classList.add("is-hidden"); closeAll(); showBtn.focus(); } }, "Tuck the cat away"));
+    el("button", { role: "menuitem", type: "button", class: "cmp-item sub", onclick: () => { P.hidden = true; save(PREF, P); root.classList.add("is-hidden"); closeAll(); showBtn.focus(); } }, "Tuck the robot away"));
   const calmBtn = () => { launcher.children[4].textContent = P.calm ? "Turn animations on" : "Calm the animations"; };
   calmBtn();
 
-  const showBtn = el("button", { class: "cat-peek", type: "button", "aria-label": "Show study companion", onclick: () => { P.hidden = false; save(PREF, P); root.classList.remove("is-hidden"); catBtn.focus(); } }, "🐾");
+  const showBtn = el("button", { class: "cat-peek", type: "button", "aria-label": "Show study companion", onclick: () => { P.hidden = false; save(PREF, P); root.classList.remove("is-hidden"); catBtn.focus(); } }, "Hi");
 
   const num = (id, label, key) => {
     const i = el("input", { id, type: "number", min: 1, max: key === "focusMin" ? 120 : 60, value: T[key], inputmode: "numeric" });

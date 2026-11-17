@@ -35,6 +35,19 @@ class TestLibraryApi(unittest.TestCase):
             os.environ["NOTIV_INPROCESS_WORKER"] = self.old_worker
         self.tmp.cleanup()
 
+    def test_delete_course_removes_its_lectures_and_only_for_the_owner(self):
+        cid = self.client.post("/courses", headers=self.headers, json={"name": "Distributed systems"}).json()["course_id"]
+        lids = [self.client.post("/lectures", headers=self.headers, json={"title": f"Week {n}", "course_id": cid}).json()["lecture_id"] for n in (1, 2)]
+        keep = self.client.post("/lectures", headers=self.headers, json={"title": "Not in the course"}).json()["lecture_id"]
+        self.assertEqual(self.client.delete(f"/courses/{cid}", headers=self.other_headers).status_code, 404)
+        self.assertEqual(self.client.delete(f"/courses/{cid}", headers=self.headers).status_code, 204)
+        self.assertEqual(self.client.get("/courses", headers=self.headers).json()["items"], [])
+        left = [l["id"] for l in self.client.get("/lectures", headers=self.headers).json()["items"]]
+        self.assertEqual(left, [keep]); [self.assertNotIn(l, left) for l in lids]
+        self.assertEqual(self.client.delete(f"/courses/{cid}", headers=self.headers).status_code, 404)
+        empty = self.client.post("/courses", headers=self.headers, json={"name": "Empty"}).json()["course_id"]
+        self.assertEqual(self.client.delete(f"/courses/{empty}", headers=self.headers).status_code, 204)
+
     def test_requires_authentication(self):
         self.assertEqual(self.client.get("/courses").status_code, 401)
         self.assertEqual(self.client.get("/lectures").status_code, 401)
@@ -90,18 +103,16 @@ class TestLibraryApi(unittest.TestCase):
         self.assertEqual(self.client.get("/lectures?limit=201", headers=self.headers).status_code, 422)
         self.assertEqual(self.client.get("/courses?offset=-1", headers=self.headers).status_code, 422)
 
-    def test_library_and_hero_assets_are_served(self):
+    def test_library_and_landing_assets_are_served(self):
         page = self.client.get("/app")
         self.assertEqual(page.status_code, 200)
         self.assertIn("/static/ui/library.js", page.text)
-        asset = self.client.get("/static/assets/notiv-hero.jpg")
+        asset = self.client.get("/static/assets/app-preview.png")
         self.assertEqual(asset.status_code, 200)
-        self.assertTrue(asset.content.startswith(b"\xff\xd8\xff"))
+        self.assertTrue(asset.content.startswith(b"\x89PNG"))
         viewer = self.client.get("/app/lectures/123")
         self.assertEqual(viewer.status_code, 200)
         self.assertIn("/static/ui/lecture.js", viewer.text)
-        import hashlib   # the landing hero must stay byte-identical to the supplied photograph (no re-encode, no filter)
-        self.assertEqual(hashlib.sha256(asset.content).hexdigest(), "7ed3a0e023612b3ae4e27b2f0703ec1e07fbd23fc902fa4805f319d80e540e63")
 
 
 if __name__ == "__main__":

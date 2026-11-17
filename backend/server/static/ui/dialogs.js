@@ -1,9 +1,25 @@
 // Dialogs shared by several screens: new lecture (real upload + processing), new course, new notebook, add-to-notebook.
-import { h, api, dialog, formDialog, icon, toast, explain, withBusy, announce, clear, notice, plural, stateChip, debounce, ApiError } from "/static/ui/core.js";
+import { h, api, dialog, formDialog, confirmDialog, icon, toast, explain, withBusy, announce, clear, notice, plural, stateChip, debounce, ApiError } from "/static/ui/core.js";
 
 const MEDIA_ACCEPT = ".mp3,.mp4,audio/mpeg,video/mp4";
 const DECK_ACCEPT = ".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const mb = n => (n / 1048576 >= 10 ? Math.round(n / 1048576) : (n / 1048576).toFixed(1)) + " MB";
+
+/* ── deleting: always confirmed, always says exactly what goes ── */
+export async function deleteLecture(l) {
+  const title = l.title || "Untitled lecture";
+  const ok = await confirmDialog({ title: "Delete this lecture?", body: `“${title}”: the recording, slides, transcript, notes and study history are permanently deleted. Notebooks that linked it keep what you already saved.`, confirm: "Delete lecture", danger: true });
+  if (!ok) return false;
+  try { await api("/lectures/" + l.id, { method: "DELETE" }); toast("Lecture deleted."); announce("Lecture deleted"); return true; }
+  catch (e) { toast(explain(e, "delete the lecture"), "err"); return false; }
+}
+export async function deleteCourse(c) {
+  const n = +c.lecture_count || 0;
+  const ok = await confirmDialog({ title: "Delete this course?", body: n ? `“${c.name}” and its ${plural(n, "lecture")} are permanently deleted, with their files, notes and study history. Notebooks keep what you already saved.` : `“${c.name}” has no lectures. It will be removed.`, confirm: n ? `Delete course and ${plural(n, "lecture")}` : "Delete course", danger: true });
+  if (!ok) return false;
+  try { await api("/courses/" + c.id, { method: "DELETE" }); toast("Course deleted."); announce("Course deleted"); return true; }
+  catch (e) { toast(explain(e, "delete the course"), "err"); return false; }
+}
 
 export async function newCourseDialog() {
   const v = await formDialog({ title: "New course", intro: "Courses group lectures so you can search and study across them.",

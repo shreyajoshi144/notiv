@@ -21,16 +21,19 @@ flowchart LR
 | [Architecture](docs/ARCHITECTURE.md) | System context, pipeline, page reading, LLM fallback, AI study, Ask, data model, security, deployment |
 | [Evaluation](docs/EVALUATION.md) | Quality properties, evaluation layers, format matrix, AI scorecard and thresholds, live checks |
 | [Results and testing](docs/RESULTS_AND_TESTING.md) | Current scores, test suite by area, regression history, **what is not verified** |
-| [Sprints](docs/SPRINTS.md) | How Notiv was built, Sprint 1 to 13 |
-| [Changelog](CHANGELOG.md) | Changes per release |
+| [Deployment](docs/DEPLOYMENT.md) | Single-server and multi-server setups, environment, run, verify, troubleshoot |
+| [Design system](docs/DESIGN_SYSTEM.md) | "Daybreak": tokens, type, brand, workspace shell, components, landing |
+| [Sprints](docs/SPRINTS.md) | How Notiv was built, Sprint 1 to 14 |
+| [Changelog](docs/CHANGELOG.md) | Changes per release |
 
-Current state (2026-10-27):
+Current state (2026-11-17):
 
-* **pytest:** 627 passed, 6 skipped.
-* **Browser e2e:** 15 / 15.
+* **pytest:** 636 passed, 2 skipped (PostgreSQL + S3 enabled).
+* **Browser e2e:** 18 / 18, no console errors.
 * **Format matrix:** 33 / 33.
 * **Offline AI scorecard:** 100 % on all four metrics.
-* **Not verified:** live AI output (no working provider key), PostgreSQL, S3 and the Docker image. See
+* **Deployment smoke test:** 41 / 41 in Docker (SQLite) and on PostgreSQL 16 + S3, with a live Groq answer model.
+* **Not verified:** live AI quality at scale, SMTP delivery, long real recordings. See
   [Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
 
 ## Quick start (development: SQLite + local files)
@@ -45,7 +48,7 @@ You need:
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-prod.txt -r requirements-test.txt
-cp .env.example .env    # set NOTIV_AUTH_SECRET: python -c 'import secrets; print(secrets.token_urlsafe(48))'
+cp .env.example .env    # set NOTIV_AUTH_SECRET and NOTIV_SIGNING_SECRET: python -c 'import secrets; print(secrets.token_urlsafe(48))'
 set -a; source .env; set +a
 PYTHONPATH=.:core:backend uvicorn server.main:app --host 127.0.0.1 --port 8000
 ```
@@ -94,22 +97,23 @@ export PYTHONPATH=.:core:backend
 python -m pytest -q core                                  # unit + integration
 python tools/eval_format_matrix.py                        # 33 file variants through the real pipeline
 python tools/eval_ai_study.py [--live]                    # AI scorecard; exits non-zero below threshold
-python tools/e2e_redesign.py --out e2e-output             # browser end-to-end (Playwright + Chromium)
+pip install playwright && playwright install chromium    # once, for the browser e2e
+python tools/e2e_redesign.py --out e2e-output             # browser end-to-end
 python tools/e2e_media.py both                            # live MP3 / MP4 with word error rate
-bash tools/verify_sprint5.sh                              # PostgreSQL / S3 / FastAPI (docker-compose.sprint5.yml)
+docker compose -f docker-compose.sprint5.yml up -d        # local PostgreSQL + private S3, then (env in the file header):
+bash tools/verify_sprint5.sh                              # pytest incl. PostgreSQL / S3, plus the browser e2e
 ```
 
 ## Deploy
 
+The Docker image is built and smoke-tested at 41 / 41 behind a simulated HTTPS proxy. You need about 2 GB RAM, a
+volume at `/data` and one AI provider key. Full guide: [Deployment](docs/DEPLOYMENT.md).
+
 ```bash
 docker build -t notiv .
-docker run --env-file .env notiv python -m core.lecture.migrations upgrade
-docker run --env-file .env -p 8000:8000 notiv                      # API
-docker run --env-file .env notiv python -m core.lecture.worker     # worker(s); scale horizontally
+docker run -d --name notiv --env-file prod.env -v notiv-data:/data -p 8000:8000 notiv   # host port: change the left 8000
+python tools/smoke_deploy.py https://your-domain
 ```
-
-Run behind HTTPS. Before the first real deploy, run the checks in
-[Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
 
 ## Layout
 
@@ -120,3 +124,5 @@ Run behind HTTPS. Before the first real deploy, run the checks in
 | `core/test_*.py` | Tests |
 | `tools/` | Evaluation and end-to-end scripts |
 | `docs/` | Documentation |
+| `Dockerfile`, `docker-entrypoint.sh` | Production image (runs as uid 10001, data on `/data`) |
+| `docker-compose.sprint5.yml` | Local PostgreSQL + S3 for the integration tests only |

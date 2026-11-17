@@ -3,12 +3,9 @@
 Storage keys never contain user-supplied names:
     lectures/<lecture_id>/assets/<uuid><allow-listed ext>
 """
-import os
 import uuid
-from typing import Optional
 
-from . import authz, obs, ops_store, quotas, validation
-from .errors import ValidationError
+from . import authz, ops_store, quotas, validation
 from .repo import LectureRepository
 from .storage import StorageService
 
@@ -59,3 +56,14 @@ class AssetService:
         ops_store.audit(user_id, "lecture.delete", "lecture", lecture_id, lec["workspace_id"])
         from . import maintenance
         maintenance.process_outbox(self.storage)
+
+    def delete_course(self, user_id: int, course_id: int) -> int:
+        """Deletes a course with every lecture in it (each through delete_lecture, so files are removed too).
+        Returns how many lectures were deleted."""
+        course = authz.get_course(self.repo, user_id, course_id)
+        ids = self.repo.course_lecture_ids(course_id, only_done=False)
+        for lid in ids:
+            self.delete_lecture(user_id, lid)
+        self.repo.delete_course_row(course_id)
+        ops_store.audit(user_id, "course.delete", "course", course_id, course["workspace_id"], detail={"lectures": len(ids)})
+        return len(ids)

@@ -17,10 +17,9 @@ import urllib.error
 import urllib.request
 
 from core.lecture import config
-from core.lecture.align import Segment
 from core.lecture.make_test_lecture import make_lecture, make_text_pdf
 from core.lecture.testkit import Env, segments
-from core.test_api_boundary import FORBIDDEN_PREFIXES, ROOT, _local_module_file, import_closure
+from core.test_api_boundary import FORBIDDEN_PREFIXES, _local_module_file, import_closure
 from core.test_workspace import SEGS
 from server.api import workspace_handlers as H
 from server.auth_tokens import create_token
@@ -205,7 +204,7 @@ class TestStaticWiring(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_FASTAPI, "fastapi/httpx not installed")
 class TestFastApiRoutes(ApiBase):
-    """Runs only where FastAPI is installed (NOT run in the authoring sandbox)."""
+    """Runs only where FastAPI is installed (requires fastapi + httpx from requirements-test.txt)."""
 
     def test_routes_registered_and_auth_enforced_and_errors_mapped(self):
         from fastapi.testclient import TestClient

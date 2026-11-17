@@ -11,7 +11,6 @@ import urllib.error
 import urllib.request
 
 from core.lecture import config
-from core.lecture.align import Segment
 from core.lecture.ask import NOT_ENOUGH
 from core.lecture.make_test_lecture import make_lecture, make_text_pdf
 from core.lecture.testkit import Env, segments
@@ -214,7 +213,7 @@ class TestAskStaticWiring(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_FASTAPI, "fastapi/httpx not installed")
 class TestFastApiAskRoutes(AskApiBase):
-    """Runs only where FastAPI is installed (NOT run in the authoring sandbox)."""
+    """Runs only where FastAPI is installed (requires fastapi + httpx from requirements-test.txt)."""
 
     def test_routes_registered_validated_and_authorized(self):
         from fastapi.testclient import TestClient

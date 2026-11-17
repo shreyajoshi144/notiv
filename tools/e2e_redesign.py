@@ -46,24 +46,37 @@ def main():
             errs = []
             pg.on("pageerror", lambda e: errs.append("pageerror " + str(e))); pg.on("console", lambda m: errs.append("console " + m.text) if m.type == "error" else None)
             shot = lambda n: pg.screenshot(path=os.path.join(out, n + ".png"))
-            with step("landing loads with exact hero image, nav, no overflow"):
+            with step("landing loads with the hero image, nav, no overflow"):
                 pg.goto(base + "/"); pg.wait_for_load_state("networkidle"); shot("landing")
                 assert "more" in pg.locator("h1").inner_text(); 
-                for t in ("Features", "Solutions", "How it works", "Resources", "FAQs", "Get started"): assert pg.get_by_role("link", name=t).first.is_visible(), t
+                for t in ("Story", "Features", "How it works", "FAQs", "Sign in", "Get started"): assert pg.get_by_role("link", name=t).first.is_visible(), t
                 assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth")
-                nat = pg.evaluate("[document.querySelector('.hero-img').naturalWidth, document.querySelector('.hero-img').naturalHeight]"); assert nat == [736, 414], nat
+                nat = pg.evaluate("[document.querySelector('.hero-img').naturalWidth, document.querySelector('.hero-img').naturalHeight]"); assert nat == [735, 412], nat
+            with step("landing nav stays on screen while scrolling and every link works"):
+                bar = pg.locator(".lp-top")
+                for name, sec in (("How it works", "how"), ("FAQs", "faqs"), ("Features", "features"), ("Story", "story")):
+                    pg.locator(".lp-top nav").get_by_role("link", name=name).click(); pg.wait_for_timeout(900)
+                    assert pg.evaluate("location.hash") == "#" + sec, pg.evaluate("location.hash")
+                    box = bar.bounding_box(); assert box and box["y"] == 0, box
+                    top = pg.evaluate(f"document.getElementById('{sec}').getBoundingClientRect().top"); assert top >= box["height"] - 2, (sec, top)
+                    if sec != "story": assert "solid" in bar.get_attribute("class"), "bar should turn solid past the hero"
+                    assert pg.locator(".lp-top nav a[aria-current]").inner_text() == name
+                    if name == "How it works": shot("landing-nav-how")
+                pg.mouse.wheel(0, 99999); pg.wait_for_timeout(600); assert bar.bounding_box()["y"] == 0
+                pg.locator(".lp-top").get_by_role("link", name="Get started").click(); pg.wait_for_url("**/register**")
+                pg.goto(base + "/"); pg.wait_for_load_state("networkidle"); assert "solid" not in bar.get_attribute("class")
             with step("register through the UI (email/password), lands in the app"):
                 pg.goto(base + "/register"); shot("register")
                 pg.fill("#name", "Test Student"); pg.fill("#email", "student@example.com"); pg.fill("#password", "correct horse battery 1"); pg.fill("#confirmation", "correct horse battery 1")
-                pg.click("button[type=submit]"); pg.wait_for_url("**/app**"); pg.wait_for_selector(".rail"); shot("desk-empty")
+                pg.click("button[type=submit]"); pg.wait_for_url("**/app**"); pg.wait_for_selector(".app-top"); shot("desk-empty")
                 assert "Add your first lecture" in pg.locator(".next").inner_text()
             uid = pg.evaluate("fetch('/auth/me').then(r=>r.json()).then(j=>j.id)")
             subprocess.run([py, os.path.join(ROOT, "tools", "seed_e2e_world.py"), "--user", str(uid), "--json", os.path.join(work, "seed.json")], env=env, check=True, capture_output=True)
             world = json.load(open(os.path.join(work, "seed.json"))); L = world["lectures"]
-            with step("desk: next action, rail nav, blurred background"):
+            with step("desk: next action, top nav with the current page marked"):
                 pg.goto(base + "/app"); pg.wait_for_selector(".next"); shot("desk")
-                assert pg.locator(".rail a.item").count() == 6
-                assert "notiv-desk-blur" in pg.evaluate("getComputedStyle(document.body).backgroundImage")
+                assert pg.locator(".app-top a.item").count() == 6
+                assert pg.locator(".topnav a.item[aria-current=page]").inner_text().strip() == "Desk"
             with step("upload PDF + MP3 via dialog, processing is shown, then a terminal state"):
                 pg.goto(base + "/app?view=library"); pg.wait_for_selector("h1"); pg.get_by_role("button", name="Add a lecture").first.click()
                 pg.fill("#nl-title", "Upload test A"); pg.set_input_files("#nl-media", mp3); pg.set_input_files("#nl-deck", pdf); shot("upload-dialog")
@@ -117,13 +130,38 @@ def main():
                 pg.get_by_text("Step size").first.click(); pg.wait_for_timeout(500)
                 pg.goto(base + f"/static/practice-quiz.html?lecture={L['gradient_descent']}"); pg.get_by_role("button", name="My question bank").click(); pg.wait_for_selector(".pq-q")
                 pg.locator(".pq-q").get_by_role("button", name="Delete").click(); pg.locator("dialog button:has-text('Delete'), [role=dialog] button:has-text('Delete')").last.click(); pg.wait_for_selector("text=No saved questions")
+            with step("notebook downloads one PDF with readable content"):
+                api = "(p, o) => import('/static/ui/core.js').then(m => m.api(p, o))"
+                nb = pg.evaluate(f"({api})('/notebooks', {{method: 'POST', json: {{title: 'E2E notebook'}}}})")
+                pg.evaluate(f"({api})('/notebooks/{nb['id']}/items', {{method: 'POST', json: {{item_type: 'flashcards', title: 'Cards', content: {{items: [{{prompt: 'What is S3?', answer: 'Object storage'}}]}}}}}})")
+                pg.goto(base + f"/app/notebooks/{nb['id']}#share"); pg.wait_for_selector(".formats")
+                assert pg.locator(".formats button").count() == 1
+                with pg.expect_download() as dl: pg.locator(".formats button").click()
+                path = dl.value.path(); data = open(path, "rb").read(); assert data.startswith(b"%PDF-"), data[:20]
+                assert dl.value.suggested_filename == "E2E-notebook.pdf", dl.value.suggested_filename
+                import io; from pypdf import PdfReader
+                text = " ".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(data)).pages); assert "Object storage" in text and '"prompt"' not in text, text[:300]
+            with step("delete a course (with its lecture) and a lecture from the library"):
+                api = "(p, o) => import('/static/ui/core.js').then(m => m.api(p, o))"
+                cid = pg.evaluate(f"({api})('/courses', {{method: 'POST', json: {{name: 'Throwaway course'}}}})")["course_id"]
+                pg.evaluate(f"({api})('/lectures', {{method: 'POST', json: {{title: 'Throwaway lecture', course_id: {cid}}}}})")
+                lone = pg.evaluate(f"({api})('/lectures', {{method: 'POST', json: {{title: 'Delete me lecture'}}}})")["lecture_id"]
+                pg.goto(base + f"/app/courses/{cid}"); pg.wait_for_selector("#cpanel .lec-li"); shot("course-delete")
+                assert "Throwaway lecture" in pg.locator("#cpanel").inner_text()  # unprocessed lectures are listed too
+                pg.get_by_role("button", name="Delete course").click(); pg.locator("dialog button:has-text('Delete course')").last.click()
+                pg.wait_for_url("**/app?view=library**"); pg.wait_for_selector("#lec-list")
+                rows = " ".join(pg.locator("#lec-list .lec-li").all_inner_texts()); assert "Throwaway lecture" not in rows, rows
+                assert "Throwaway course" not in pg.locator("#co-h").locator("xpath=../..").inner_text()
+                pg.get_by_role("button", name="Delete Delete me lecture").click(); pg.locator("dialog button:has-text('Delete lecture')").last.click()
+                pg.locator(".lec-li", has_text="Delete me lecture").wait_for(state="detached"); shot("library-after-delete")
+                assert pg.request.get(base + f"/lectures/{lone}/overview").status == 404
             with step("account page + sign out"):
                 pg.goto(base + "/static/account.html"); pg.wait_for_selector("h1"); shot("account"); pg.get_by_role("button", name="Sign out").click(); pg.wait_for_url("**/sign-in**")
             with step("mobile layout: landing, auth, desk (no horizontal overflow)"):
-                m = br.new_context(viewport={"width": 390, "height": 844}, is_mobile=True); mp = m.new_page()
+                m = br.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, device_scale_factor=2); mp = m.new_page()
                 mp.goto(base + "/"); mp.wait_for_load_state("networkidle"); mp.screenshot(path=os.path.join(out, "m-landing.png"))
                 assert mp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "landing overflow"
-                mp.goto(base + "/sign-in"); mp.fill("#email", "student@example.com"); mp.fill("#password", "correct horse battery 1"); mp.click("button[type=submit]"); mp.wait_for_url("**/app**"); mp.wait_for_selector(".rail"); mp.wait_for_timeout(600)
+                mp.goto(base + "/sign-in"); mp.fill("#email", "student@example.com"); mp.fill("#password", "correct horse battery 1"); mp.click("button[type=submit]"); mp.wait_for_url("**/app**"); mp.wait_for_selector(".app-top"); mp.wait_for_timeout(600)
                 mp.screenshot(path=os.path.join(out, "m-desk.png")); assert mp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "desk overflow"
                 mp.goto(base + f"/app/lectures/{L['gradient_descent']}"); mp.wait_for_timeout(1500); mp.screenshot(path=os.path.join(out, "m-study.png"))
                 assert mp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "study overflow"
