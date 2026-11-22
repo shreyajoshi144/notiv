@@ -1,4 +1,5 @@
-# Build: docker build -t notiv .   Persistent data (SQLite, uploads, Whisper weights) lives in /data: mount a volume there.
+# Build: docker build -t notiv .   Persistent data (SQLite, uploads, Whisper weights) lives in /data: mount a volume there
+# (docker run -v notiv-data:/data, or a Railway/Render volume at /data). No VOLUME line: Railway rejects it.
 FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg poppler-utils libreoffice-impress tesseract-ocr tesseract-ocr-eng fonts-liberation fonts-dejavu-core fonts-noto-core && rm -rf /var/lib/apt/lists/* \
  && useradd --create-home --uid 10001 notiv
@@ -13,7 +14,6 @@ ENV PYTHONPATH=/app:/app/core:/app/backend PYTHONUNBUFFERED=1 NOTIV_ENV=producti
 # FORWARDED_ALLOW_IPS: hosting platforms terminate HTTPS at a proxy whose address is not 127.0.0.1. Without trusting its
 # X-Forwarded-Proto the app sees http://, the browser sends an https:// Origin, and every write fails the origin check.
 # Narrow it to the proxy's address range when you know it. (Client IPs for rate limits are governed by NOTIV_TRUST_PROXY.)
-VOLUME /data
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:%s/healthz' % os.environ.get('PORT','8000'))"
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
