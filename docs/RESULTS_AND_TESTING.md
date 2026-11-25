@@ -1,7 +1,8 @@
 # Notiv — Results and testing
 
 What has been run, what it showed, and what has **not** been verified. Method and thresholds are in
-[Evaluation](EVALUATION.md). Latest state: **2026-10-31**, macOS, Python 3.12 venv, Docker 29 (linux/arm64).
+[Evaluation](EVALUATION.md). Latest state: **2026-11-22** (live deployment verified). Local runs: macOS, Python 3.12 venv, Docker 29 (linux/arm64).
+Live runs: Railway, `https://notiv-production.up.railway.app`.
 
 ## 1. Scoreboard
 
@@ -20,6 +21,7 @@ What has been run, what it showed, and what has **not** been verified. Method an
 | AI scorecard `--live` | not run | ⚠️ not re-run with the working key |
 | PostgreSQL 16 + S3 (SeaweedFS) | contract + S3 tests pass; app in production mode on PostgreSQL + S3: smoke **41 / 41** | ✅ |
 | Fresh checkout following the README | install, `pip check`, server, smoke 41 / 41, pytest pass | ✅ |
+| **Live deployment on Railway** (2026-11-22) | **76 / 76** checks: accounts, security, PDF / PPTX with live AI 29 / 29; MP3 / MP4 with live AI 25 / 25; pages, notebook PDF, course delete 22 / 22 | ✅ |
 
 ```mermaid
 pie showData title pytest core (638 collected, PostgreSQL + S3 enabled)
@@ -33,19 +35,19 @@ pie showData title pytest core (638 collected, PostgreSQL + S3 enabled)
 |---|---|---|
 | Ingestion and pipeline | `test_lecture_pipeline`, `test_foundation`, `test_hardening`, `test_ocr`, `test_reflow`, `test_worker_lifecycle`, `test_integration_whisper` | 137 |
 | Production operations | `test_sprint5_ops`, `test_sprint5_http`, `test_sprint5_core`, `test_sprint5_fastapi`, `test_pg_translate`, `test_pg_adapter_logic`, `test_pg_contract`, `test_s3_integration` | 114 |
-| Workspace, notes, notebooks | `test_workspace`, `test_workspace_api`, `test_notes`, `test_notebooks`, `test_library_api` | 97 |
+| Workspace, notes, notebooks | `test_workspace`, `test_workspace_api`, `test_notes`, `test_notebooks`, `test_library_api` | 98 |
 | Study and knowledge | `test_study`, `test_study_api`, `test_question_bank` | 92 |
 | Ask and retrieval | `test_ask`, `test_ask_api`, `test_retrieval_modes` | 91 |
 | AI layer | `test_llm`, `test_ai_study`, `test_media_study`, `test_ai_quiz`, `test_eval_regressions` | 79 |
 | Security and auth | `test_api_boundary`, `test_ui_security`, `test_auth_cookie_integration`, `test_password_auth` | 27 |
-| **Total** | 35 files | **637** |
+| **Total** | 35 files | **638** (636 pass, 2 skip) |
 
 ```mermaid
 xychart-beta
     title "Tests per area"
     x-axis ["Pipeline", "Ops", "Workspace", "Study", "Ask", "AI", "Security"]
     y-axis "tests" 0 --> 150
-    bar [137, 114, 97, 92, 91, 79, 27]
+    bar [137, 114, 98, 92, 91, 79, 27]
 ```
 
 Notes:
@@ -157,6 +159,29 @@ flowchart LR
     D -- "hyphen parts + closed form matched" --> OK[41 / 41]
 ```
 
+## 6c. Live deployment (Railway)
+
+Deployed 2026-11-22 as a single-instance production setup: the Docker image from this repository, `NOTIV_ENV=production`,
+SQLite and uploads on a Railway volume at `/data`, in-process worker, Groq as the answer model and
+`NOTIV_WHISPER_MODEL=base`. Settings: [Deployment §8](DEPLOYMENT.md#8-live-deployment-railway).
+
+| Run | How to reproduce | Result |
+|---|---|---|
+| Accounts, security, PDF / PPTX with live AI | `python tools/smoke_deploy.py https://notiv-production.up.railway.app --only pdf,pptx` | **29 / 29** |
+| MP3 / MP4 with live AI | `python tools/smoke_deploy.py https://notiv-production.up.railway.app --only mp3,mp4` | **25 / 25** |
+| Pages, notebook PDF download, course delete, password-reset response | `python tools/smoke_live_pages.py https://notiv-production.up.railway.app` | **22 / 22** (re-run 2026-11-25: 22 / 22) |
+| **Total** | | **76 / 76** |
+
+Problems met while going live (configuration, not code defects; all fixed before the runs above):
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Build rejected: "docker VOLUME is not supported" | Railway does not accept a `VOLUME` line in the Dockerfile | line removed; the volume is attached in Railway instead |
+| Settings had no effect | staged variable changes were never deployed | deploy after every variable change |
+| 502 on every request | the app listened on 8080, the public domain pointed at 8000 | domain and `PORT` both set to 8080 |
+| Writes refused by CORS / origin check | URLs saved without `https://` and with a stray quote | corrected `NOTIV_PUBLIC_BASE_URL` and `NOTIV_CORS_ORIGINS` |
+| Recordings failed: "No space left on device" | the speech model cache filled the volume | cache cleared; `NOTIV_WHISPER_MODEL=base` (smaller model) |
+
 ## 7. Regression history
 
 ```mermaid
@@ -178,6 +203,7 @@ xychart-beta
 | 2026-10-27 | deploy audit, evaluation tools, UI polish | 627 passed, 6 skipped | e2e 15 / 15, matrix 33 / 33, offline AI 100 % |
 | 2026-10-31 | Docker image verified, hyphenated terms in Ask | 631 passed, 6 skipped | deployment smoke 41 / 41, offline AI 100 % |
 | 2026-11-17 | PDF-only export, course delete, audit (legacy removed, PostgreSQL + S3 verified) | 636 passed, 2 skipped | e2e 18 / 18, smoke 41 / 41 (SQLite and PostgreSQL + S3), live Groq |
+| 2026-11-22 | go-live on Railway (Dockerfile `VOLUME` removed) | unchanged | live deployment 76 / 76 |
 
 ## 8. Bugs found by evaluation runs (all have regression tests)
 
@@ -203,6 +229,8 @@ xychart-beta
 | Full 39-page handwritten coverage | vision daily limit | as above |
 | SMTP password reset delivery | no relay configured | configure `NOTIV_SMTP_*`, request a reset |
 | Long and real-speech recordings | only ~45 s TTS tested | upload a real lecture recording |
+| Transcription accuracy of the `base` model used live | WER was measured with `small` | run `tools/e2e_media.py both` with `NOTIV_WHISPER_MODEL=base` |
+| Behaviour under many simultaneous users | single instance, no load test | load-test, or move to the PostgreSQL + S3 shape |
 
 ## 10. How to reproduce
 
@@ -213,4 +241,5 @@ export PYTHONPATH=.:core:backend
 .venv/bin/python tools/eval_ai_study.py
 .venv/bin/python tools/e2e_redesign.py --out e2e-output
 .venv/bin/python tools/smoke_deploy.py http://localhost:8080 --as-proxy https://notiv.example.com   # against a running container
+.venv/bin/python tools/smoke_live_pages.py https://notiv-production.up.railway.app                     # pages and account features
 ```

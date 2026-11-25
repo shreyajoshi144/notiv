@@ -3,7 +3,23 @@
 All notable changes to Notiv. Newest first. Format based on [Keep a Changelog](https://keepachangelog.com/).
 Sprint context: [SPRINTS.md](SPRINTS.md). Test evidence: [RESULTS_AND_TESTING.md](RESULTS_AND_TESTING.md).
 
-## [Unreleased] — 2026-11-17 · Redesign: Daybreak, PDF export, pre-release audit
+## 2026-11-25 · Project documentation
+
+- Added: [project management documents](project-management/README.md): charter, PRD, roadmap, milestones, product
+  backlog, risk register, decision log, QA test report, go-live checklist, closure report and case study.
+- Added: `tools/smoke_live_pages.py`, the page and account checks used for the live verification (previously a one-off
+  script).
+- Added: GitHub issue templates (bug, feature) and a pull request template.
+- Fixed in docs: test count by area (workspace 98, total 638); PostgreSQL + S3 marked verified locally in Deployment.
+
+## 2026-11-22 · Live on Railway
+
+- Changed: the `Dockerfile` no longer declares `VOLUME /data`; Railway rejects it, and the volume is attached by the
+  platform.
+- Deployed: `https://notiv-production.up.railway.app`, single-instance production setup, verified at 76 / 76 live
+  checks ([Results §6c](RESULTS_AND_TESTING.md#6c-live-deployment-railway), [Deployment §8](DEPLOYMENT.md#8-live-deployment-railway)).
+
+## 2026-11-17 · Redesign: Daybreak, PDF export, pre-release audit
 
 - Security: `.dockerignore` now excludes `*.env`, so deployment env files (API keys, secrets) are never copied into the image.
 - Removed: the unused legacy meeting/RAG prototype (`core/rag_engine.py`, `vector_store.py`, `job_queue.py`, `extractor.py`, `routes_chat.py`, `services/`, `schemas/` and their never-collected tests), six outdated browser scripts, `requirements-export.txt`, `logo.svg`.

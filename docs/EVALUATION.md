@@ -28,7 +28,7 @@ flowchart TB
         g6[Text-quality gate before anything becomes evidence]
     end
     subgraph L1[Layer 1 · Unit and regression tests · every change · offline]
-        t1[pytest: 627 tests, model calls faked]
+        t1[pytest: 638 tests, model calls faked]
         t2[Regression tests for every bug found in eval runs]
     end
     subgraph L2[Layer 2 · Offline scorecards · before deploy · no provider needed]
@@ -44,8 +44,12 @@ flowchart TB
     subgraph L4[Layer 4 · Browser end-to-end]
         b1[e2e_redesign.py: real Chromium, desktop + phone]
     end
+    subgraph L5[Layer 5 · Deployment · every release]
+        d1[smoke_deploy.py: Docker or live URL, all four formats]
+        d2[smoke_live_pages.py: pages, PDF download, delete]
+    end
     L0 --> L1 --> L2 --> L3
-    L2 --> L4
+    L2 --> L4 --> L5
 ```
 
 Layer 0 is the most important: the checks run on every generated item in production, so an unfaithful citation is
@@ -145,6 +149,6 @@ configured provider and prints the named reason for any that fail.
 
 1. A number is only reported after the command that produces it has run; the date and environment are recorded in the
    [Results and testing](RESULTS_AND_TESTING.md) log.
-2. Skipped tests and unrun checks are written down as **UNVERIFIED**, never as passed.
+2. Skipped tests and unrun checks are written down as **not verified** (scripts print `UNVERIFIED`), never as passed.
 3. Every bug found by an evaluation run gets a regression test before the run is repeated.
 4. Faked model calls prove plumbing and grounding, not AI quality. That needs `--live`.

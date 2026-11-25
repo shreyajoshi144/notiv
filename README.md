@@ -26,13 +26,33 @@ flowchart LR
 | [Sprints](docs/SPRINTS.md) | How Notiv was built, Sprint 1 to 14 |
 | [Changelog](docs/CHANGELOG.md) | Changes per release |
 
-Current state (2026-11-17):
+**Project management** ([index](docs/project-management/README.md)): how the project was planned, run, tested and
+closed.
+
+| Doc | What it covers |
+|---|---|
+| [Project charter](docs/project-management/PROJECT_CHARTER.md) | Objectives, scope, success criteria, constraints |
+| [PRD](docs/project-management/PRD.md) | Requirements with acceptance criteria and status |
+| [Roadmap](docs/project-management/ROADMAP.md) | Phases delivered; now, next, later |
+| [Milestones](docs/project-management/MILESTONES.md) | Dates, exit criteria and evidence |
+| [Product backlog](docs/project-management/PRODUCT_BACKLOG.md) | Epics and open items, prioritised |
+| [Risk register](docs/project-management/RISK_REGISTER.md) | Risks, scores, mitigations, status |
+| [Decision log](docs/project-management/DECISION_LOG.md) | Key decisions and scope changes, with reasons |
+| [QA test report](docs/project-management/QA_TEST_REPORT.md) | Test scope, results, defects, sign-off |
+| [Go-live checklist](docs/project-management/GO_LIVE_CHECKLIST.md) | Release readiness for the Railway launch |
+| [Project closure report](docs/project-management/PROJECT_CLOSURE_REPORT.md) | Outcomes vs goals, lessons learned, handover |
+| [Case study](docs/project-management/CASE_STUDY.md) | One-page summary: problem, cuts, quality |
+
+**Live demo:** https://notiv-production.up.railway.app (deployed 2026-11-22, **76 / 76** live checks).
+
+Current state (2026-11-22):
 
 * **pytest:** 636 passed, 2 skipped (PostgreSQL + S3 enabled).
 * **Browser e2e:** 18 / 18, no console errors.
 * **Format matrix:** 33 / 33.
 * **Offline AI scorecard:** 100 % on all four metrics.
 * **Deployment smoke test:** 41 / 41 in Docker (SQLite) and on PostgreSQL 16 + S3, with a live Groq answer model.
+* **Live deployment (Railway):** 76 / 76 checks.
 * **Not verified:** live AI quality at scale, SMTP delivery, long real recordings. See
   [Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
 

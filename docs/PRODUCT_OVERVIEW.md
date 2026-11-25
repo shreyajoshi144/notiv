@@ -129,3 +129,5 @@ Design system "Daybreak": details in [Design system](DESIGN_SYSTEM.md).
 * [Results and testing](RESULTS_AND_TESTING.md): what has been verified and what has not.
 * [Deployment](DEPLOYMENT.md) and [Design system](DESIGN_SYSTEM.md).
 * [Sprints](SPRINTS.md) and the [changelog](CHANGELOG.md): how it got here.
+* [Project management documents](project-management/README.md): charter, PRD, roadmap, backlog, risks, QA and closure.
+* Live demo: https://notiv-production.up.railway.app

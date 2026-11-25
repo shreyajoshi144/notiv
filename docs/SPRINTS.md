@@ -24,6 +24,7 @@ timeline
         Sprint 12 : Recordings : MP3 / MP4 through the same AI pipeline
         Sprint 13 : Launch readiness : Evaluation tools, study place, UI polish
         Sprint 14 : Deploy and redesign : Docker verified, Daybreak UI
+        Sprint 15 : Go-live : Railway, 76 / 76 live checks, project docs
 ```
 
 ---
@@ -173,7 +174,18 @@ Regression target: a 39-page handwritten system-design PDF with a garbled text l
   PostgreSQL 16 + S3 verified (contract tests and the full deploy smoke test); `.dockerignore` stopped copying `*.env`
   files into the image.
 
+## Sprint 15 — Go-live (2026-11-22 → 11-25)
+
+* Deployed to Railway from this repository: Docker image, volume at `/data`, Groq answer model, `base` speech model.
+* Five configuration problems fixed on the way (Dockerfile `VOLUME`, undeployed variables, port mismatch, URL typos,
+  disk full from the model cache): [Results §6c](RESULTS_AND_TESTING.md#6c-live-deployment-railway).
+* Live verification: **76 / 76**.
+* Project documentation: [project management set](project-management/README.md).
+
 ## What is next
+
+The prioritised list is in the [roadmap](project-management/ROADMAP.md) and the
+[product backlog](project-management/PRODUCT_BACKLOG.md). In short:
 
 * Re-run the live AI checks with the working key (`tools/eval_ai_study.py --live`, `tools/e2e_media.py both`).
 * Test long, real-speech recordings and SMTP password-reset delivery.

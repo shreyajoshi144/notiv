@@ -79,7 +79,7 @@ flowchart LR
 | VALIDATE | checks type, signature, size; rejects encrypted / damaged PDFs and slide-less PPTX | the file is not one of the four formats or is broken |
 | PROBE | ffprobe: duration, streams, separate `audio_duration`; ignores MP3 cover art | there is no audio track |
 | EXTRACT_AUDIO | 16 kHz WAV; duration checked against the audio track (MP3 5 %, MP4 1 %) | the decode is truncated |
-| TRANSCRIBE | faster-whisper `small`; segments checked for order, bounds, overlap, NaN | no speech is found or the transcript is invalid |
+| TRANSCRIBE | faster-whisper (`NOTIV_WHISPER_MODEL`, default `small`; the live demo uses `base`); segments checked for order, bounds, overlap, NaN | no speech is found or the transcript is invalid |
 | PROCESS_SLIDES | renders pages; picks the best text source per page (see §4) | every page is unreadable |
 | EXTRACT_FRAMES / DETECT_SLIDE_CHANGES | samples video frames; OpenCV matching with boundary bisection | (skipped without video + deck) |
 | ALIGN | maps transcript lines to slides | |
@@ -284,3 +284,5 @@ flowchart LR
   private, config is valid, and it reports processing tools, Python packages and the answer model.
 * Rate limiting: `NOTIV_RATELIMIT_BACKEND=db` for multiple replicas, or `NOTIV_SINGLE_INSTANCE=1`.
 * Workers scale horizontally; leases keep two workers off the same job.
+* The live demo runs the single-server shape instead (one container, SQLite and files on a volume, in-process worker):
+  see [Deployment §8](DEPLOYMENT.md#8-live-deployment-railway).

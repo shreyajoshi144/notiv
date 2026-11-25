@@ -26,7 +26,7 @@ flowchart LR
 | Files | local storage on `/data` | private S3 (`NOTIV_STORAGE=s3`) |
 | Worker | in-process (`NOTIV_INPROCESS_WORKER=1`) | `python -m core.lecture.worker` containers |
 | Rate limits | `memory` + `NOTIV_SINGLE_INSTANCE=1` | `db` (shared) |
-| Verified | ✅ Docker smoke test | ⚠️ PostgreSQL / S3 not run live |
+| Verified | ✅ Docker smoke test; ✅ live on Railway (76 / 76) | ✅ locally on PostgreSQL 16 + S3 (smoke 41 / 41); not run on a hosted platform |
 
 ## 2. Requirements
 
@@ -120,3 +120,22 @@ uploads PDF, PPTX, MP3 and MP4 files and checks:
 | Container restarts while processing | out of memory | at least 2 GB RAM |
 | AI summaries missing, "no provider" | no working key | add a key; run `tools/llm_smoke.py` |
 | "Forgot password" fails | SMTP not configured | set `NOTIV_SMTP_*` |
+| Recordings fail with "No space left on device" | speech model cache filled the volume | clear `/data/hf`, use `NOTIV_WHISPER_MODEL=base`, or a larger volume |
+
+## 8. Live deployment (Railway)
+
+The public demo, `https://notiv-production.up.railway.app`, runs the single-server shape. It went live on 2026-11-22
+and passed 76 / 76 live checks ([Results §6c](RESULTS_AND_TESTING.md#6c-live-deployment-railway)).
+
+| Setting | Value |
+|---|---|
+| Source | this GitHub repository, built from the `Dockerfile` |
+| Volume | Railway volume mounted at `/data` (the Dockerfile has no `VOLUME` line; Railway rejects it) |
+| Port | `PORT=8080`, and the public domain targets port 8080 |
+| Variables | the §3 list with the real domain, `GROQ_API_KEY`, and `NOTIV_WHISPER_MODEL=base` |
+| Not configured | SMTP (password-reset email), metrics |
+
+Why Railway: Notiv needs ffmpeg, LibreOffice and a speech model inside the container, about 2 GB RAM and a disk that
+survives redeploys. Railway runs the Docker image unchanged with a persistent volume. Serverless platforms cannot run
+these tools, and free tiers with 512 MB RAM fail during transcription.
+
