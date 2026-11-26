@@ -17,9 +17,9 @@ actually happened during the project.
 | R9 | Hosting credit runs out and the demo goes offline | 3 | 3 | 9 | Single-instance setup keeps cost low; the image runs on any Docker host | — | Open: add a payment method or move host before credit ends |
 | R10 | Single instance cannot handle many users | 3 | 3 | 9 | Multi-server setup (PostgreSQL + S3) built and verified locally | — | Accepted for a demo (B-10) |
 | R11 | Claims not proven on real-world use | 3 | 3 | 9 | Every number reported only after its run; gaps labelled "not verified" | — | Open (B-01 → B-03, B-08) |
-| R12 | Password reset unavailable on the live demo | 5 | 2 | 10 | Clear message instead of a silent failure | **Yes** (no email service configured) | Accepted for a demo (B-05) |
+| R12 | Password reset unavailable on the live demo | 5 | 2 | 10 | Clear message instead of a silent failure; Brevo sender ready, needs configuring | **Yes** (no email service configured) | Accepted for a demo (B-05) |
 | R13 | Scope creep for a one-person project | 3 | 3 | 9 | Explicit non-goals; cuts recorded in the decision log (8 export formats → 1, live capture deferred, social sign-in removed) | **Yes**: export formats built, then cut | Controlled |
-| R14 | Key-person dependency (one developer) | 5 | 3 | 15 | Documentation, 638 automated tests, reproducible commands for every result | — | Accepted (inherent to a solo project) |
+| R14 | Key-person dependency (one developer) | 5 | 3 | 15 | Documentation, 639 automated tests, reproducible commands for every result | — | Accepted (inherent to a solo project) |
 
 ```mermaid
 quadrantChart

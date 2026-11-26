@@ -3,6 +3,15 @@
 All notable changes to Notiv. Newest first. Format based on [Keep a Changelog](https://keepachangelog.com/).
 Sprint context: [SPRINTS.md](SPRINTS.md). Test evidence: [RESULTS_AND_TESTING.md](RESULTS_AND_TESTING.md).
 
+## 2026-11-26 · Password-reset email through Brevo
+
+- Added: password-reset email can be sent through the Brevo HTTPS API (`NOTIV_BREVO_API_KEY`, `NOTIV_MAIL_FROM`).
+  Railway blocks outbound SMTP on Trial and Hobby plans, so SMTP alone could not work on the live demo. SMTP still
+  works where it is allowed; Brevo is used first when both are set.
+- Added: a failed send is logged with its reason (`brevo send failed: HTTP …`) instead of being swallowed.
+- Tests: the reset email goes to Brevo with the right sender, recipient and link; a rejected send returns 503 and the
+  link is never usable.
+
 ## 2026-11-25 · Project documentation
 
 - Added: [project management documents](project-management/README.md): charter, PRD, roadmap, milestones, product

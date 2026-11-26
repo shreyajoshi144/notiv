@@ -24,7 +24,7 @@ project manager, engineer and tester.
 | 10 | [Go-live checklist](GO_LIVE_CHECKLIST.md) | Release readiness for the Railway launch |
 | 11 | [Project closure report](PROJECT_CLOSURE_REPORT.md) | Goals vs outcomes, lessons learned, handover |
 
-## Key facts (the same in every document)
+## Key facts at release 1.0 (2026-11-22; the same in every document)
 
 | Fact | Value | Source |
 |---|---|---|
@@ -38,6 +38,9 @@ project manager, engineer and tester.
 | Hard real document | **31 / 34** checks (39 handwritten pages; AI vision quota ran out) | [Results §4](../RESULTS_AND_TESTING.md#4-live-handwritten-pdf-systemdesginpdf-39-pages--run-2) |
 | Deployment smoke test | **41 / 41** in Docker (SQLite) and on PostgreSQL 16 + S3 | [Results §6b](../RESULTS_AND_TESTING.md#6b-docker-deployment-smoke-test) |
 | Sprints | 15 (Sprint 1 → Sprint 15) | [Sprints](../SPRINTS.md) |
+
+Changes after release are in the [changelog](../CHANGELOG.md): on 2026-11-26 a Brevo email sender was added for
+password reset (one new test, 639 in total).
 
 If a number here and a number in another document ever differ, [Results and testing](../RESULTS_AND_TESTING.md) is the
 source of truth.

@@ -26,7 +26,7 @@ Requirement IDs: [PRD](PRD.md).
 | B-02 | Measure transcription accuracy of the live `base` model | Must | WER (0.0 % / 0.8 %) was measured with the `small` model; the live demo uses `base` | `tools/e2e_media.py both` with `NOTIV_WHISPER_MODEL=base`; WER logged |
 | B-03 | Test real, long lecture recordings | Must | Only ~45-second synthetic speech was tested live | A real recording of 45+ minutes processes; WER measured on a 5-minute hand-checked sample |
 | B-04 | Full re-run of the 39-page handwritten PDF | Should | The last run stopped at 31 / 34 when the AI vision quota ran out | 34 / 34 with a sufficient quota, or the remaining gap named |
-| B-05 | Email for password reset | Should | Reset is built and unit-tested, but no email service is configured on the live demo | A reset email arrives and the link works once, within 30 minutes |
+| B-05 | Email for password reset | Should | Reset is built and tested; a Brevo sender was added on 2026-11-26 because Railway blocks SMTP on Trial/Hobby plans. Still needs the key on Railway and one live test | A reset email arrives and the link works once, within 30 minutes |
 | B-06 | Automatic backups of the data volume | Should | There are no automatic backups of the live volume | Daily snapshot; a restore tested once |
 | B-07 | Run tests on every pull request (CI) | Should | Tests run locally only | A GitHub Actions workflow runs `pytest core` on each PR and blocks merging on failure |
 | B-08 | Usability test with students | Should | No formal user research was run | 5 students complete 4 core tasks (upload, study, ask, export); success rate and issues recorded |

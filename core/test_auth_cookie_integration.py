@@ -74,7 +74,7 @@ def test_unconfigured_google_and_smtp_fail_honestly():
         import os
         from fastapi.testclient import TestClient
         from server.main import app
-        for k in ('NOTIV_OIDC_ISSUER','NOTIV_OIDC_CLIENT_ID','NOTIV_OIDC_REDIRECT_URI','NOTIV_SMTP_HOST','NOTIV_SMTP_FROM'):
+        for k in ('NOTIV_OIDC_ISSUER','NOTIV_OIDC_CLIENT_ID','NOTIV_OIDC_REDIRECT_URI','NOTIV_SMTP_HOST','NOTIV_SMTP_FROM','NOTIV_MAIL_FROM','NOTIV_BREVO_API_KEY'):
             os.environ.pop(k,None)
         c=TestClient(app,follow_redirects=False)
         cfg=c.get('/auth/config').json(); assert 'oidc' not in cfg and cfg['password'] is True
@@ -106,3 +106,42 @@ def test_password_reset_is_one_time_and_revokes_existing_sessions():
         assert c.post('/auth/password/login',json={"email":p['email'],"password":p['password']}).status_code==401
         assert c.post('/auth/password/login',json={"email":p['email'],"password":new['password']}).status_code==200
     ''')
+
+
+def test_reset_email_goes_through_brevo_api_when_configured():
+    _run('''
+        import io, json, os, urllib.error, urllib.request
+        import server.api.routes_password_auth as pa
+        from fastapi.testclient import TestClient
+        from server.main import app
+        for k in ('NOTIV_SMTP_HOST','NOTIV_SMTP_FROM'): os.environ.pop(k,None)
+        os.environ.update({"NOTIV_BREVO_API_KEY":"test-brevo-key","NOTIV_MAIL_FROM":"Notiv <noreply@notiv.test>",
+                           "NOTIV_PUBLIC_BASE_URL":"https://notiv.test"})
+        assert pa.mail_configured()=="brevo"
+        sent=[]
+        class Resp:
+            status=201
+            def __enter__(self): return self
+            def __exit__(self,*a): return False
+        def fake_urlopen(req,timeout):
+            sent.append((req.full_url,req.get_method(),dict(req.header_items()),json.loads(req.data))); return Resp()
+        pa.urllib.request.urlopen=fake_urlopen
+        c=TestClient(app)
+        p={"name":"Brevo","email":"brevo@example.com","password":"long-secure-password-123","confirmation":"long-secure-password-123"}
+        assert c.post('/auth/register',json=p).status_code==200
+        r=c.post('/auth/password/forgot',json={"email":p['email']}); assert r.status_code==200,r.text
+        url,method,headers,body=sent[0]
+        assert url=="https://api.brevo.com/v3/smtp/email" and method=="POST"
+        assert headers.get("Api-key")=="test-brevo-key"
+        assert body["sender"]=={"name":"Notiv","email":"noreply@notiv.test"} and body["to"]==[{"email":p['email']}]
+        assert "https://notiv.test/reset-password?token=" in body["textContent"]
+        token=body["textContent"].split("token=")[1].split()[0]
+        new={"token":token,"password":"new-secure-password-456","confirmation":"new-secure-password-456"}
+        assert c.post('/auth/password/reset',json=new).status_code==200
+        # A rejected send (for example an unverified sender) fails clearly and the link is never usable.
+        def reject(req,timeout): raise urllib.error.HTTPError(req.full_url,400,"Bad Request",{},io.BytesIO(b'{"code":"invalid_parameter"}'))
+        pa.urllib.request.urlopen=reject
+        r=c.post('/auth/password/forgot',json={"email":p['email']}); assert r.status_code==503,r.text
+        assert "NOTIV_BREVO_API_KEY" in r.text
+    ''')
+

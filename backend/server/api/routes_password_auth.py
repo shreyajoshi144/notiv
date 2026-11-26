@@ -1,6 +1,11 @@
-"""Local email/password authentication. Password reset email requires explicitly configured SMTP."""
-import hashlib, hmac, secrets, smtplib, ssl, time
+"""Local email/password authentication.
+
+Password-reset email needs a sender: the Brevo HTTPS API (NOTIV_BREVO_API_KEY), or SMTP (NOTIV_SMTP_HOST). Brevo is
+tried first because many hosts (Railway Trial/Hobby among them) block outbound SMTP but allow HTTPS.
+"""
+import hashlib, hmac, json, logging, secrets, smtplib, ssl, time, urllib.error, urllib.request
 from email.message import EmailMessage
+from email.utils import parseaddr
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -99,18 +104,59 @@ def me(request: Request):
     row=store.conn().execute("SELECT email,display_name FROM users WHERE id=?",(u["id"],)).fetchone()
     return JSONResponse({"id":u["id"],"email":row["email"],"name":row["display_name"]},headers=NO_STORE)
 
-def _send_reset(email, token):
-    host=settings.env("NOTIV_SMTP_HOST",""); sender=settings.env("NOTIV_SMTP_FROM","")
-    if not host or not sender: return False
-    port=settings.env_int("NOTIV_SMTP_PORT",587,lo=1,hi=65535); user=settings.env("NOTIV_SMTP_USER",""); password=settings.env("NOTIV_SMTP_PASSWORD","")
+log = logging.getLogger("notiv.auth")
+BREVO_URL = "https://api.brevo.com/v3/smtp/email"
+RESET_SUBJECT = "Reset your Notiv password"
+
+
+def _mail_from():
+    return settings.env("NOTIV_MAIL_FROM", "") or settings.env("NOTIV_SMTP_FROM", "")
+
+
+def mail_configured():
+    """Which sender password-reset email would use: 'brevo', 'smtp' or None."""
+    if not _mail_from(): return None
+    if settings.env("NOTIV_BREVO_API_KEY", ""): return "brevo"
+    if settings.env("NOTIV_SMTP_HOST", ""): return "smtp"
+    return None
+
+
+def _reset_text(token):
     base=settings.env("NOTIV_PUBLIC_BASE_URL","http://127.0.0.1:8000").rstrip("/")
-    msg=EmailMessage(); msg["Subject"]="Reset your Notiv password"; msg["From"]=sender; msg["To"]=email
-    msg.set_content("Use this one-time link to reset your Notiv password (expires in 30 minutes):\n\n"+base+"/reset-password?token="+token+"\n\nIf you did not request this, ignore this email.")
+    return ("Use this one-time link to reset your Notiv password (expires in 30 minutes):\n\n"+base+"/reset-password?token="+token+
+            "\n\nIf you did not request this, ignore this email.")
+
+
+def _send_brevo(to, subject, text):
+    name, addr = parseaddr(_mail_from())
+    body=json.dumps({"sender":{"name":name or "Notiv","email":addr},"to":[{"email":to}],"subject":subject,"textContent":text}).encode()
+    req=urllib.request.Request(BREVO_URL,data=body,method="POST",headers={
+        "api-key":settings.env("NOTIV_BREVO_API_KEY",""),"accept":"application/json","content-type":"application/json"})
+    try:
+        with urllib.request.urlopen(req,timeout=10) as r:
+            return 200<=r.status<300
+    except urllib.error.HTTPError as e:
+        log.warning("brevo send failed: HTTP %s %s", e.code, e.read(300).decode("utf-8","replace"))
+        return False
+
+
+def _send_smtp(to, subject, text):
+    host=settings.env("NOTIV_SMTP_HOST","")
+    port=settings.env_int("NOTIV_SMTP_PORT",587,lo=1,hi=65535); user=settings.env("NOTIV_SMTP_USER",""); password=settings.env("NOTIV_SMTP_PASSWORD","")
+    msg=EmailMessage(); msg["Subject"]=subject; msg["From"]=_mail_from(); msg["To"]=to
+    msg.set_content(text)
     with smtplib.SMTP(host,port,timeout=10) as server:
         server.starttls(context=ssl.create_default_context())
         if user: server.login(user,password)
         server.send_message(msg)
     return True
+
+
+def _send_reset(email, token):
+    kind=mail_configured()
+    if kind=="brevo": return _send_brevo(email,RESET_SUBJECT,_reset_text(token))
+    if kind=="smtp": return _send_smtp(email,RESET_SUBJECT,_reset_text(token))
+    return False
 
 @router.post("/auth/password/forgot")
 def forgot(body: ForgotBody, request: Request):
@@ -122,10 +168,11 @@ def forgot(body: ForgotBody, request: Request):
         c.execute("UPDATE password_resets SET used_at=? WHERE user_id=? AND used_at IS NULL",(now,user["id"]))
         c.execute("INSERT INTO password_resets(token_hash,user_id,expires_at,used_at,created_at) VALUES(?,?,?,?,?)",(digest(token),user["id"],now+1800,None,now)); c.commit()
         try: sent=_send_reset(email,token)
-        except Exception: sent=False
+        except Exception as e:
+            log.warning("password reset email failed: %s", type(e).__name__); sent=False
         if not sent:
             c.execute("UPDATE password_resets SET used_at=? WHERE token_hash=?",(time.time(),digest(token))); c.commit()
-            raise HTTPException(503,"Password reset email is not configured or delivery failed. Configure NOTIV_SMTP_* and try again.")
+            raise HTTPException(503,"Password reset email is not configured or delivery failed. Configure NOTIV_BREVO_API_KEY or NOTIV_SMTP_* and try again.")
     return JSONResponse({"ok":True,"message":"If an account exists, password reset instructions will be sent."},headers=NO_STORE)
 
 @router.post("/auth/password/reset")

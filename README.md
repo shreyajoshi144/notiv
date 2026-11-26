@@ -47,13 +47,14 @@ closed.
 
 Current state (2026-11-22):
 
-* **pytest:** 636 passed, 2 skipped (PostgreSQL + S3 enabled).
+* **pytest:** 636 passed, 2 skipped with PostgreSQL + S3 enabled (2026-11-17); latest default run 633 passed,
+  6 skipped (2026-11-26, 639 tests).
 * **Browser e2e:** 18 / 18, no console errors.
 * **Format matrix:** 33 / 33.
 * **Offline AI scorecard:** 100 % on all four metrics.
 * **Deployment smoke test:** 41 / 41 in Docker (SQLite) and on PostgreSQL 16 + S3, with a live Groq answer model.
 * **Live deployment (Railway):** 76 / 76 checks.
-* **Not verified:** live AI quality at scale, SMTP delivery, long real recordings. See
+* **Not verified:** live AI quality at scale, password-reset email on the live demo, long real recordings. See
   [Results and testing §9](docs/RESULTS_AND_TESTING.md#9-not-verified--read-before-deploying).
 
 ## Quick start (development: SQLite + local files)
@@ -108,7 +109,8 @@ Copy `.env.example`. Secrets may be supplied as `NOTIV_…_FILE`. With `NOTIV_EN
 | `/readyz` | 503 until database, storage privacy, config, processing tools and answer model check out |
 | `GET /upload-formats` | the accepted formats and limits |
 
-Password reset needs SMTP (`NOTIV_SMTP_*`, `NOTIV_PUBLIC_BASE_URL`). Without it, reset requests fail clearly.
+Password reset needs an email sender and `NOTIV_PUBLIC_BASE_URL`: the Brevo API (`NOTIV_BREVO_API_KEY` +
+`NOTIV_MAIL_FROM`, works on hosts that block SMTP) or SMTP (`NOTIV_SMTP_*`). Without one, reset requests fail clearly.
 
 ## Tests and evaluation
 

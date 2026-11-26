@@ -72,7 +72,7 @@ Priority: **M** must, **S** should, **C** could. Status: ✅ delivered and verif
 | FR-16 | Notebooks, sharing and download | S | Notebooks with sources, notes, generated items and a canvas; read-only share links with expiry and revocation; **one** laid-out PDF download | ✅ unit tests (share links), browser e2e and live (PDF download) |
 | FR-17 | Accounts | M | Email and password sign-up and sign-in; secure session cookie; writes need a CSRF token | ✅ tests, live |
 | FR-18 | Privacy between users | M | Another account gets 404 on every lecture, notebook and summary (same as "not found") | ✅ tests, Docker smoke, live |
-| FR-19 | Password reset | S | A one-time, 30-minute reset link is emailed | ⚠️ built and unit-tested; no email service configured live |
+| FR-19 | Password reset | S | A one-time, 30-minute reset link is emailed | ⚠️ built and tested (Brevo API or SMTP); no sender configured on the live demo yet |
 | FR-20 | Study place | C | Daily goal, focus timer, streak and ambient sound | ✅ browser e2e (focus timer persists across reload) |
 
 ## 5. Non-functional requirements

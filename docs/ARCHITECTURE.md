@@ -28,7 +28,7 @@ flowchart TB
         mis[Mistral]
         ant[Anthropic]
     end
-    smtp[SMTP relay<br/>password reset]
+    smtp[Brevo API or SMTP<br/>password reset]
 
     student -- HTTPS, cookie session + CSRF --> api
     api --> db

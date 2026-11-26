@@ -28,7 +28,7 @@ flowchart TB
         g6[Text-quality gate before anything becomes evidence]
     end
     subgraph L1[Layer 1 · Unit and regression tests · every change · offline]
-        t1[pytest: 638 tests, model calls faked]
+        t1[pytest: 639 tests, model calls faked]
         t2[Regression tests for every bug found in eval runs]
     end
     subgraph L2[Layer 2 · Offline scorecards · before deploy · no provider needed]

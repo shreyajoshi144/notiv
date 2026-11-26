@@ -188,4 +188,4 @@ The prioritised list is in the [roadmap](project-management/ROADMAP.md) and the
 [product backlog](project-management/PRODUCT_BACKLOG.md). In short:
 
 * Re-run the live AI checks with the working key (`tools/eval_ai_study.py --live`, `tools/e2e_media.py both`).
-* Test long, real-speech recordings and SMTP password-reset delivery.
+* Test long, real-speech recordings and password-reset email delivery (Brevo) on the live demo.

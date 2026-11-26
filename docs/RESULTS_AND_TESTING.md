@@ -8,7 +8,8 @@ Live runs: Railway, `https://notiv-production.up.railway.app`.
 
 | Check | Result | Status |
 |---|---|---|
-| Unit + integration tests (`pytest core`, with PostgreSQL + S3 enabled) | **636 passed, 2 skipped, 0 failed** (638 collected) | ✅ |
+| Unit + integration tests (`pytest core`, with PostgreSQL + S3 enabled, 2026-11-17) | **636 passed, 2 skipped, 0 failed** (638 collected) | ✅ |
+| Unit + integration tests, latest (`pytest core`, default run without PostgreSQL + S3, 2026-11-26) | **633 passed, 6 skipped, 0 failed** (639 collected; the 4 extra skips are the PostgreSQL + S3 tests) | ✅ |
 | Docker image + deployment smoke test (`tools/smoke_deploy.py`) | **41 / 41** behind a simulated HTTPS proxy | ✅ |
 | Browser end-to-end (`tools/e2e_redesign.py`, real Chromium) | **18 / 18**, zero console errors | ✅ |
 | Format robustness matrix (`tools/eval_format_matrix.py`) | **33 / 33** correct outcomes (PDF 11, PPTX 7, MP3 7, MP4 8) | ✅ |
@@ -39,15 +40,15 @@ pie showData title pytest core (638 collected, PostgreSQL + S3 enabled)
 | Study and knowledge | `test_study`, `test_study_api`, `test_question_bank` | 92 |
 | Ask and retrieval | `test_ask`, `test_ask_api`, `test_retrieval_modes` | 91 |
 | AI layer | `test_llm`, `test_ai_study`, `test_media_study`, `test_ai_quiz`, `test_eval_regressions` | 79 |
-| Security and auth | `test_api_boundary`, `test_ui_security`, `test_auth_cookie_integration`, `test_password_auth` | 27 |
-| **Total** | 35 files | **638** (636 pass, 2 skip) |
+| Security and auth | `test_api_boundary`, `test_ui_security`, `test_auth_cookie_integration`, `test_password_auth` | 28 |
+| **Total** | 35 files | **639** |
 
 ```mermaid
 xychart-beta
     title "Tests per area"
     x-axis ["Pipeline", "Ops", "Workspace", "Study", "Ask", "AI", "Security"]
     y-axis "tests" 0 --> 150
-    bar [137, 114, 98, 92, 91, 79, 27]
+    bar [137, 114, 98, 92, 91, 79, 28]
 ```
 
 Notes:
@@ -204,6 +205,7 @@ xychart-beta
 | 2026-10-31 | Docker image verified, hyphenated terms in Ask | 631 passed, 6 skipped | deployment smoke 41 / 41, offline AI 100 % |
 | 2026-11-17 | PDF-only export, course delete, audit (legacy removed, PostgreSQL + S3 verified) | 636 passed, 2 skipped | e2e 18 / 18, smoke 41 / 41 (SQLite and PostgreSQL + S3), live Groq |
 | 2026-11-22 | go-live on Railway (Dockerfile `VOLUME` removed) | unchanged | live deployment 76 / 76 |
+| 2026-11-26 | password-reset email through the Brevo API | 633 passed, 6 skipped (default run) | Brevo delivery on the live demo: not yet configured |
 
 ## 8. Bugs found by evaluation runs (all have regression tests)
 
@@ -227,7 +229,7 @@ xychart-beta
 |---|---|---|
 | Live AI quality (study material, AI quiz, vision) at scale | only the Groq answer chain was re-checked with the new key | add a working key, run `tools/llm_smoke.py`, then `tools/eval_ai_study.py --live`, `tools/e2e_media.py both`, `tools/e2e_system_design.py <pdf>` |
 | Full 39-page handwritten coverage | vision daily limit | as above |
-| SMTP password reset delivery | no relay configured | configure `NOTIV_SMTP_*`, request a reset |
+| Password-reset email delivery | no sender configured on the live demo (Brevo sender built and tested 2026-11-26) | set `NOTIV_BREVO_API_KEY` + `NOTIV_MAIL_FROM`, request a reset |
 | Long and real-speech recordings | only ~45 s TTS tested | upload a real lecture recording |
 | Transcription accuracy of the `base` model used live | WER was measured with `small` | run `tools/e2e_media.py both` with `NOTIV_WHISPER_MODEL=base` |
 | Behaviour under many simultaneous users | single instance, no load test | load-test, or move to the PostgreSQL + S3 shape |
